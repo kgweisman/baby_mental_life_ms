@@ -26,3 +26,4 @@ The analyses were built using the following packages:
 - kableExtra (version 1.3.4)
 - cowplot (version 1.1.1)
 - langcog (version 0.1.9001; available at https://github.com/langcog/langcog-package)
+- knitr (version 1.33)
