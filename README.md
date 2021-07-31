@@ -16,7 +16,7 @@ The **paper** is available as a PDF [here](https://github.com/kgweisman/baby_men
 
 The analyses were built using the following packages:
 
-- tidyverse (version XX) 
+- tidyverse (version 1.3.1) 
 - psych (version 2.1.6)
 - mgcv (version 1.8-36)
 - lme4 (version 1.1-27.1)
