@@ -1,30 +1,28 @@
 # Beliefs about the development of mental life
 
-Authors: Kara Weisman, Lucy S. King, & Kathryn L. Humphreys
+[authors removed to preserve anonymity]
 
-Repository related to psychological studies exploring methods for capturing intuitive theories as Bayesian networks using structure learning techniques.
+**Abstract**: In a series of large-scale studies we assessed how US adults conceptualize the development of the human mind over the first five years of life. Exploratory factor analysis identified four categories of mental capacities that anchored participants’ representations of the developing human mind: _bodily sensations_, _negative affect_, _social connection_, and _cognition and control_. Participants perceived that these four aspects of mental life were present to different degrees at birth, followed different developmental trajectories, and were driven by different developmental mechanisms (e.g., biological "preprogramming," physical maturation, passive observation, social learning). These studies reveal the lay theories that govern US adults’ understanding of the development of the human mind, illuminating the cognitive architecture that supports some of the most important social interactions: caregiving relationships with infants and children.
 
-Manuscript in preparation, title may change. Nothing here is final. please contact if you have any questions about this project or code. For related work, see [this repo](https://github.com/kgweisman/baby_mental_life).
+This repo includes all analyses and fully reproducible manuscript files for the paper and supplemental materials.
 
-## Abstract
+**Datasets** are available [here](https://github.com/kgweisman/baby_mental_life_ms/tree/master/data/deidentified). Scripts for cleaning and anonymization can be found [here](https://github.com/kgweisman/baby_mental_life_ms/tree/master/code).
 
-In a series of large-scale studies we assessed how US adults conceptualize the development of the human mind over the first five years of life. Exploratory factor analysis identified four categories of mental capacities that anchored participants’ representations of the developing human mind: _bodily sensations_, _negative affect_, _social connection_, and _cognition and control_. Participants perceived that these four aspects of mental life were present to different degrees at birth, followed different developmental trajectories, and were driven by different developmental mechanisms (e.g., biological "preprogramming," physical maturation, passive observation, social learning). These studies reveal the lay theories that govern US adults’ understanding of the development of the human mind, illuminating the cognitive architecture that supports some of the most important social interactions: caregiving relationships with infants and children.
+**Analysis scripts** are embedded in the fully reproducible manuscripts for the supplemental materials ([here](https://github.com/kgweisman/baby_mental_life_ms/blob/master/supplement/supplement-main.Rmd)) and the main text of the paper ([here](https://github.com/kgweisman/baby_mental_life_ms/blob/master/paper/paper.Rmd)).
 
-## Repository Overview
+The **paper** is available as a PDF [here](https://github.com/kgweisman/baby_mental_life_ms/blob/master/paper/paper.pdf), and the **supplemental materials** [here](https://github.com/kgweisman/baby_mental_life_ms/blob/master/supplement/supplement-main.pdf).
 
-* `paper/`: Rmarkdown and supporting files for creation of the manuscript. Must run supplemental materials notebook first.
-* `supplement/`: Rmarkdown and supporting files for creation of the supplemental materials.
-* `data/`: Data for all studies reported in paper.
-* `code/`: Code scripts on which all Rmarkdown notebooks depend.
+**Programming environment**: All analyses were conducted in R (version 4.1.0); platform: aarch64-apple-darwin20 (64-bit); running under: macOS Big Sur 11.4.
 
-## Reproducibility notes
+The analyses were built using the following packages:
 
-_Thanks to [Derek Powell](https://github.com/derekpowell) for providing a model of a fully reproducible manuscript, which we have closely followed here._
-
-To reproduce the manuscript and all analyses, follow the following steps after cloning this repository.
-
-1. Create a `local/` folder in the repository (at the terminal: `mkdir local`)
-2. Install required packages by running `install-packages.R` to make sure you have all packages needed.
-3. Open and knit `supplement/supplement-main.Rmd` to generate supplement PDF and save files needed for reproduction of manuscript.
-4. Open and knit `paper/paper-main.Rmd` to generate manuscript PDF.
-
+- tidyverse (version XX) 
+- psych (version 2.1.6)
+- mgcv (version 1.8-36)
+- lme4 (version 1.1-27.1)
+- ggdendro (version 0.1.22)
+- dendextend (version 1.15.1)
+- parameters (version 0.14.0)
+- kableExtra (version 1.3.4)
+- cowplot (version 1.1.1)
+- langcog (version 0.1.9001; available at https://github.com/langcog/langcog-package)
