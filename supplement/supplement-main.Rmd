@@ -2131,6 +2131,7 @@ d_cap_comp <- read_csv("../data/capacities_comparison.csv") %>%
 ```{r tabcapcomp, include = T, warning = F, message = F}
 d_cap_comp %>%
   select(-Domain) %>%
+  mutate_all(~gsub("similar to .", "similar to \\`", .)) %>% 
   mutate(`Study 1` = case_when(`Study 2` != "-" ~ paste0(`Study 1`, 
                                                          footnote_marker_symbol(1)),
                                TRUE ~ `Study 1`)) %>%
@@ -2151,7 +2152,7 @@ d_cap_comp %>%
   pack_rows("Social connection", 17, 38) %>%
   pack_rows("Cognition and control", 39, 60) %>%
   pack_rows("Not included", 61, nrow(d_cap_comp)) %>%
-  footnote(symbol = c("Also used in Study 2; ", "Also unsed in Study 3"),
+  footnote(symbol = c("Also used in Study 2; ", "Also used in Study 3"),
            symbol_title = "Notes: ",
            footnote_as_chunk = T)
 ```
