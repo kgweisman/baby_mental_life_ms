@@ -1037,7 +1037,7 @@ In addition to the EFA just described, we also conducted a hierarchical cluster 
 ```{r figS07 code, fig.width = 3, fig.asp = 0.6}
 d3_mech_ratings_wide %>% 
   rename_with(~recode(., 
-                      "preprogrammed" = "biologically ‘preprogrammed’",
+                      "preprogrammed" = "biologically 'preprogrammed'",
                       "womb_experiences" = "experiences in the womb",
                       "body_grows" = "body grows and matures",
                       "brain_changes" = "brain changes",
