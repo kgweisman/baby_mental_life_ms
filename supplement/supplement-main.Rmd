@@ -421,7 +421,7 @@ In the main text, we briefly described the four-factor EFA solution suggested by
 
 ### Exploratory factor analyses (EFAs)
 
-As in Study 1, we examined the results of three factor retention protocols (parallel analysis, presented in the main text; minimizing BIC; and Weisman et al.’s factor retentia criteria [@weisman.etal2017a]), and our interpretation of how best to characterize our dataset was guided by the degree of consensus among these three protocols and the interpretability of the retained factors under each protocol. Here we present these three factor retention protocols separately.
+As in Study 1, we examined the results of three factor retention protocols (parallel analysis, presented in the main text; minimizing BIC; and Weisman et al.’s factor retention criteria [@weisman.etal2017a]), and our interpretation of how best to characterize our dataset was guided by the degree of consensus among these three protocols and the interpretability of the retained factors under each protocol. Here we present these three factor retention protocols separately.
 
 #### Parallel analysis
 
