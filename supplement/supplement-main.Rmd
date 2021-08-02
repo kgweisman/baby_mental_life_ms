@@ -2,7 +2,7 @@
 title: "Beliefs about the development of mental life"
 subtitle: "Supplemental Materials"
 author: "[authors removed to preserve anonymity]"
-date: "July 31, 2021"
+date: "August 2, 2021"
 output:
   # word_document:
   #   reference_docx: word-styles-ref.docx
@@ -66,7 +66,7 @@ suppressWarnings(suppressMessages(source("../code/data_prep_s3.R",
 \newpage
 In a series of large-scale studies we assessed how US adults conceptualize the development of the human mind over the first five years of life. We identified four distinct suites of mental capacities that are perceived by US adults to develop over human infancy and early childhood, _bodily sensations_, _negative affect_, _social connection_, and _cognition and control_ (Study 1); charted how these different aspects of mental life are perceived to change over the first five years of a child’s life (Studies 2-3); and explored the lay theories that underlie the observed differences in the perceived developmental trajectories of these four aspects of mental life (Study 3). 
 
-In these Supplemental Materials, we provide extended information about the results presented in the main paper, present additional results, and provide an item-by-item comparison of the capacity items used here to items used in previous work on mind perception [@gray.etal2007, @weisman.etal2017a, @weisman.etal2017b, @malle2019].
+In these Supplemental Materials, we provide extended information about the results presented in the main paper, present additional results, and provide an item-by-item comparison of the capacity items used here to items used in previous work on mind perception [@gray.etal2007; @weisman.etal2017a; @weisman.etal2017b; @malle2019].
 
 Note: This is a fully reproducible manuscript, written in RMarkdown using the "knitr" package for R [@xie2021]. The full, editable script for all analyses, figures, and tables (here and in the main text) is available in the .Rmd file that generated this document, which can be found in the following GitHub repository: https://anonymous.4open.science/r/baby_mental_life_ms-C261/ (repo has been anonymized).
 
@@ -287,7 +287,7 @@ knitr::include_graphics("../outputs/figS02.pdf")
 
 ### Capacity ratings: Developmental trajectories
 
-Study 1 also offered a first glimpse into US adults' perceptions of the development of mental life. Supplementary Figure \@ref(fig:figS03) provides a visualization of mean "scores" for each domain of mental life. To calculate these scores, we sorted each of the 60 mental capacities included in this study into on of the four domains (_bodily sensations_, _negative affect_, _social connection_ or _cognition and control_) according to the factor on which it loaded the most strongly and positively (see Supplementary Table \@ref(tab:tabcapcomp)); for each participant, we then took the average of their responses to capacities in each domain at each target age. As we go on to confirm in Studies 2-3, this visualization suggests that participants perceived capacities for _bodily sensations_ to be substantial at birth and to develop relatively little over the first five years of life; in contrast, they perceived capacities for _negative affect_, _social connection_, and in particular _cognition and control_ to be much more limited at birth and to development dramatically over the first five years of life. 
+Study 1 also offered a first glimpse into US adults' perceptions of the development of mental life. Supplementary Figure \@ref(fig:figS03) provides a visualization of mean "scores" for each domain of mental life. To calculate these scores, we sorted each of the 60 mental capacities included in this study into on of the four domains (_bodily sensations_, _negative affect_, _social connection_ or _cognition and control_) according to the factor on which it loaded the most strongly and positively (see Supplementary Table \@ref(tab:tabs1efaparload)); for each participant, we then took the average of their responses to capacities in each domain at each target age. As we go on to confirm in Studies 2-3, this visualization suggests that participants perceived capacities for _bodily sensations_ to be substantial at birth and to develop relatively little over the first five years of life; in contrast, they perceived capacities for _negative affect_, _social connection_, and in particular _cognition and control_ to be much more limited at birth and to development dramatically over the first five years of life. 
 
 ```{r s1 scales}
 d1_scales <- s1_efa_par$loadings[] %>%
