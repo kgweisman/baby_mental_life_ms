@@ -1,8 +1,11 @@
 ---
 title: "Beliefs about the development of mental life"
 subtitle: "Supplemental Materials"
-author: "[authors removed to preserve anonymity]"
-date: "August 2, 2021"
+author:
+  - Kara Weisman^[Department of Psychology, University of California, Riverside; kgweisman@gmail.com]
+  - Lucy S. King^[Department of Psychiatry and Behavioral Sciences, Tulane University School of Medicine; Department of Psychology, The University of Texas at Austin]
+  - Kathryn L. Humprheys^[Department of Psychology, Vanderbilt University]
+date: "August 7, 2021"
 output:
   # word_document:
   #   reference_docx: word-styles-ref.docx
@@ -12,8 +15,7 @@ output:
     toc: true
     toc_depth: 3
 bibliography: "references.bib"
-# cls: "article.cls"
-csl: nature.csl
+cls: article.cls
 figsintext: yes
 header-includes: 
    - \usepackage{lineno}
@@ -68,7 +70,7 @@ In a series of large-scale studies we assessed how US adults conceptualize the d
 
 In these Supplemental Materials, we provide extended information about the results presented in the main paper, present additional results, and provide an item-by-item comparison of the capacity items used here to items used in previous work on mind perception [@gray.etal2007; @weisman.etal2017a; @weisman.etal2017b; @malle2019].
 
-Note: This is a fully reproducible manuscript, written in RMarkdown using the "knitr" package for R [@xie2021]. The full, editable script for all analyses, figures, and tables (here and in the main text) is available in the .Rmd file that generated this document, which can be found in the following GitHub repository: https://anonymous.4open.science/r/baby_mental_life_ms-C261/ (repo has been anonymized).
+Note: This is a fully reproducible manuscript, written in RMarkdown using the "knitr" package for R [@xie2021]. The full, editable script for all analyses, figures, and tables (here and in the main text) is available in the .Rmd file that generated this document, which can be found in the following GitHub repository: https://github.com/kgweisman/baby_mental_life_ms.
 
 # Extended results
 
@@ -2142,7 +2144,7 @@ d_cap_comp %>%
   mutate_at(vars(`Gray et al. (2007)`),
             funs(gsub("\\..*", "", .))) %>%
   kable("latex", booktabs = T, escape = F, longtable = T) %>%
-  kable_styling(latex_options = c("repeat_header", "striped"), font_size = 8) %>%
+  kable_styling(latex_options = c("repeat_header"), font_size = 8) %>%
   add_header_above(c("Current studies" = 1,
                      "Previous studies" = 5)) %>%
   column_spec(1, width = "4cm") %>%

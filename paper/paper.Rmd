@@ -1,16 +1,18 @@
 ---
 title: "Beliefs about the development of mental life"
-author: "[Authors removed to preserve anonymity]"
+author:
+  - Kara Weisman^[Department of Psychology, University of California, Riverside; kgweisman@gmail.com]
+  - Lucy S. King^[Department of Psychiatry and Behavioral Sciences, Tulane University School of Medicine; Department of Psychology, The University of Texas at Austin]
+  - Kathryn L. Humprheys^[Department of Psychology, Vanderbilt University]
 output:
-  # word_document:
-  #   reference_docx: word-styles-ref.docx
-   bookdown::pdf_document2:
-    latex_engine: xelatex
-    fig_caption: yes
-    toc: false
+  word_document:
+    reference_docx: word-styles-ref.docx
+   # bookdown::pdf_document2:
+   #  latex_engine: xelatex
+   #  fig_caption: yes
+   #  toc: false
 bibliography: "../supplement/references.bib"
-# cls: "../supplement/article.cls"
-csl: "../supplement/nature.csl"
+cls: "../supplement/article.cls"
 figsintext: yes
 header-includes: 
    - \usepackage{lineno}
@@ -225,9 +227,9 @@ Critical next steps in this line of research, then, will involve assessing which
 
 # Methods
 
-Methods, inclusion/exclusion criteria, and analyses marked as "preregistered" were preregistered on the Open Science Framework (OSF) website: (Study 1: [link](https://osf.io/e6ajh/?view_only=f2539dbce3664172907aa7a381f62d34); Study 2: [link](https://osf.io/j72dg/?view_only=7e4c01fec32f40a3b13c0ebc2b7ced18); Study 3: [link](https://osf.io/xh8ce/?view_only=56649aff37aa4f1db2dc06b2e69576f4); links have been anonymized). All studies were approved by the [removed to preserve anonymity] Internal Review Board.
+Methods, inclusion/exclusion criteria, and analyses marked as "preregistered" were preregistered on the Open Science Framework (OSF) website: (Study 1: https://osf.io/e6ajh/); Study 2: https://osf.io/j72dg; Study 3: https://osf.io/xh8ce/)). All studies were approved by the Stanford University Internal Review Board.
 
-Note: This is a fully reproducible manuscript, written in RMarkdown using the "knitr" package for R [@xie2021]. The full, editable script for all analyses, figures, and tables (here and in the Supplemental Materials) is available in the .Rmd file that generated this document, which can be found in the following GitHub repository: https://anonymous.4open.science/r/baby_mental_life_ms-C261/ (repo has been anonymized).
+Note: This is a fully reproducible manuscript, written in RMarkdown using the "knitr" package for R [@xie2021]. The full, editable script for all analyses, figures, and tables (here and in the Supplemental Materials) is available in the .Rmd file that generated this document, which can be found in the following GitHub repository: https://github.com/kgweisman/baby_mental_life_ms.
 
 ## Study 1
 
