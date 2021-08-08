@@ -921,6 +921,34 @@ fig02a <- d2_gam_r1_pred %>%
        caption = bquote(paste("Adjusted R"^"2"*" = ", .(d2_gam_r1_rsq)))) +
   guides(color = guide_none())
 
+# make jpg version (darker)
+fig02a_jpg <- d2_gam_r1_pred %>%
+  ggplot(aes(x = target_year, y = score, color = factor)) +
+  facet_grid(~ factor) +
+  geom_path(aes(group = ResponseId),
+            # color = "#160072",
+            alpha = 1, size = 0.02) +
+  geom_smooth(aes(y = pred_score), 
+              color = "#f94802",
+              fill = NA, size = 1, lty = 1) +
+  geom_pointrange(data = . %>%
+                    group_by(factor, target_year) %>%
+                    multi_boot_standard(col = "score") %>%
+                    ungroup,
+                  aes(y = mean, ymin = ci_lower, ymax = ci_upper),
+                  color = "black",
+                  # color = "#160072",
+                  fatten = 1) +
+  scale_color_viridis_d(end = 0.9, option = "viridis") +
+  scale_y_continuous(breaks = seq(0, 1, 0.25),
+                     labels = seq(0, 100, 25)) +
+  theme_minimal() +
+  theme(panel.background = element_rect(fill = NA)) +
+  labs(x = "Target age (years)",
+       y = "Mean response", # \n0 = not at all capable, 100 = completely capable",
+       caption = bquote(paste("Adjusted R"^"2"*" = ", .(d2_gam_r1_rsq)))) +
+  guides(color = guide_none())
+
 # # save plot
 # if (resave_plots == T | !file.exists("../outputs/fig02a.pdf")) {
 #   ggsave("../outputs/fig02a.svg")
@@ -1094,6 +1122,34 @@ fig02b <- d3_gam_r1_pred %>%
        caption = bquote(paste("Adjusted R"^"2"*" = ", .(d3_gam_r1_rsq)))) +
   guides(color = guide_none())
 
+# make jpg version (darker)
+fig02b_jpg <- d3_gam_r1_pred %>%
+  ggplot(aes(x = target_year, y = score, color = factor)) +
+  facet_grid(~ factor) +
+  geom_path(aes(group = ResponseId),
+            # color = "#160072",
+            alpha = 1, size = 0.02) +
+  geom_smooth(aes(y = pred_score), 
+              color = "#f94802",
+              fill = NA, size = 1, lty = 1) +
+  geom_pointrange(data = . %>%
+                    group_by(factor, target_year) %>%
+                    multi_boot_standard(col = "score") %>%
+                    ungroup,
+                  aes(y = mean, ymin = ci_lower, ymax = ci_upper),
+                  color = "black",
+                  # color = "#160072",
+                  fatten = 1) +
+  scale_color_viridis_d(end = 0.9, option = "viridis") +
+  scale_y_continuous(breaks = seq(0, 1, 0.25),
+                     labels = seq(0, 100, 25)) +
+  theme_minimal() +
+  theme(panel.background = element_rect(fill = NA)) +
+  labs(x = "Target age (years)",
+       y = "Mean response", # \n0 = not at all capable, 100 = completely capable",
+       caption = bquote(paste("Adjusted R"^"2"*" = ", .(d3_gam_r1_rsq)))) +
+  guides(color = guide_none())
+
 # # save plot
 # if (resave_plots == T | !file.exists("../outputs/fig02b.pdf")) {
 #   ggsave("../outputs/fig02b.svg")
@@ -1107,9 +1163,18 @@ plot_grid(fig02a, fig02b,
 
 # save plot
 if (resave_plots == T | !file.exists("../outputs/fig02.pdf")) {
-  ggsave("../outputs/fig02.jpg")
   ggsave("../outputs/fig02.svg")
   ggsave("../outputs/fig02.pdf")
+}
+```
+
+```{r fig02_jpg, fig.cap="Perceived developmental trajectories for four domains of mental life (Studies 2-3). Lighter lines represent individual participants' responses, black points correspond to mean responses across the sample, error bars are bootstrapped 95% confidence intervals, and thick red lines are predictions from our generalized additive models (beta regressions). In Study 2 (Panel A), participants assessed 5 capacities within each domain, and assessed all capacities for a given target age before moving on to the next target age. In Study 3 (Panel B), participants assessed 2 capacities within each domain, and assessed a single capacity for all target ages before moving on to the next capacity.", fig.width = 4, fig.asp = 0.7}
+plot_grid(fig02a_jpg, fig02b_jpg,
+          ncol = 1, labels = "AUTO")
+
+# save plot   
+if (resave_plots == T | !file.exists("../outputs/fig02.jpg")) {
+  ggsave("../outputs/fig02.jpg")
 }
 ```
 
@@ -1654,6 +1719,68 @@ fig03b <- d3_mech_ratings %>%
   guides(color = guide_none())
   # guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
 # fig03b
+
+# jpg version (darker)
+fig03b_jpg <- d3_mech_ratings %>%
+  # filter(!is.na(dev_factor_cluster)) %>%
+  filter(!is.na(dev_factor)) %>%
+  mutate(dev_factor_cluster = case_when(
+    dev_factor == "brain_changes" ~ "brain changes",
+    dev_factor_cluster == "intrinsic" ~ "INTRINSIC",
+    dev_factor_cluster == "extrinsic" ~ "EXTRINSIC"),
+    dev_factor_cluster = factor(dev_factor_cluster,
+                                levels = c("INTRINSIC", 
+                                           "EXTRINSIC",
+                                           "brain changes"))) %>%  
+  # participant-level means for each cluster, by capacity
+  group_by(ResponseId, dev_factor_cluster, factor, capacity) %>%
+  summarise(score_a = mean(response, na.rm = T)) %>%
+  ungroup() %>%
+  # participant-level mean of means for each cluster, by domain
+  group_by(ResponseId, dev_factor_cluster, factor) %>%
+  summarise(score_b = mean(score_a, na.rm = T)) %>%
+  ungroup() %>%
+  mutate(blank_var = "  ") %>%
+  ggplot(aes(x = reorder(str_pad(dev_factor_cluster, 
+                                 width = 28, side = "left"),
+                         as.numeric(dev_factor_cluster)), 
+             y = score_b, color = factor)) +
+  facet_grid(cols = vars(blank_var),
+             rows = vars(reorder(toupper(factor), as.numeric(factor))),
+             scales = "free", space = "free") +
+  geom_hline(yintercept = 3, lty = 2, color = "darkred") +
+  geom_path(data = . %>%
+              filter(dev_factor_cluster != "brain changes"),
+            aes(group = ResponseId), 
+            alpha = 1, size = 0.02,
+            position = position_jitter(width = 0.2, 
+                                       height = 0, 
+                                       seed = 94305)) +
+  geom_point(alpha = 0.6, size = 0.02,
+             position = position_jitter(width = 0.2, 
+                                        height = 0, 
+                                        seed = 94305)) +
+  # group-level mean of means of means for each cluster, by domain
+  geom_pointrange(data = . %>%
+                    group_by(factor, dev_factor_cluster) %>%
+                    multi_boot_standard(col = "score_b") %>%
+                    ungroup(),
+                  aes(y = mean, ymin = ci_lower, ymax = ci_upper),
+                  color = "black", fatten = 2) +
+  scale_color_viridis_d(end = 0.9, option = "viridis") +
+  scale_y_continuous(breaks = seq(0, 6, 3), minor_breaks = seq(0, 6, 1)) +
+  theme_minimal() +
+  theme(panel.background = element_rect(fill = NA), 
+        strip.text = element_text(vjust = 0),
+        legend.position = "top",
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+        # plot.margin = unit(c(0.5, 0.5, 0.5, 1.1), "cm")) +
+  labs(x = "Developmental mechanism type",
+       y = "Mean response (0 = not at all important, 6 = extremely important)",
+       color = "Domain") +
+  guides(color = guide_none())
+  # guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
+# fig03b_jpg
 ```
 
 ### Developmental mechanisms: Selection of "most important"
@@ -2122,9 +2249,30 @@ plot_grid(fig03a + guides(color = guide_none()),
 
 # save plot
 if (resave_plots == T | !file.exists("../outputs/fig03.pdf")) {
-  ggsave("../outputs/fig03.jpg")
   ggsave("../outputs/fig03.svg")
   ggsave("../outputs/fig03.pdf")
+}
+```
+
+```{r fig03_jpg, fig.cap="Perceived importance of various mechanisms in the development of four domains of mental life (Study 3); see main text for the full text of each mechanism. Panel A shows ratings for each developmental mechanism and both of the capacities within each domain; Panel B shows mean ratings for extrinsic vs. intrinsic mechanisms for each domain of capacities; and Panel C shows the percentage of trials on which participants selected extrinsic vs. intrinsic mechanisms as the 'most important' driver of development. Lighter points and lines represent individual participants' responses, black points correspond to mean scores across the sample, and error bars are bootstrapped 95% confidence intervals. The dotted red line at the midpoint of the response scale in Panels A and B is intended to aid visual comparison across domains.", fig.width = 5, fig.asp = 6.75/(4.5 + 1.5 + 1.5)}
+plot_grid(fig03a + guides(color = guide_none()),
+          NULL, # to adjust spacing between panels
+          fig03b_jpg, # + labs(x = " "),
+          NULL,
+          fig03c + 
+            labs(x = " ",
+                 y = "Selection of 'most important' mechanism") +
+            scale_y_continuous(limits = c(0, 2*nrow(d3_demo)),
+                               breaks = c(0, nrow(d3_demo), 2*nrow(d3_demo)),
+                               labels = c("0%", "50%", "100%")) +
+            guides(fill = guide_none(),
+                   color = guide_none()), 
+          nrow = 1, rel_widths = c(4.5, 0.1, 1.5, 0.1, 1.5), 
+          labels = c("A", "", "B", "", "C"))
+
+# save plot
+if (resave_plots == T | !file.exists("../outputs/fig03.jpg")) {
+  ggsave("../outputs/fig03.jpg")
 }
 ```
 
