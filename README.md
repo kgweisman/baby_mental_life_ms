@@ -14,15 +14,15 @@ The **paper** is available as a PDF [here](https://github.com/kgweisman/baby_men
 
 The **key plots** presented in the main text of the paper are displayed below.
 
-![Figure 1](https://github.com/kgweisman/baby_mental_life_ms/blob/master/outputs/fig01.pdf?raw=TRUE)
+![Figure 1](https://github.com/kgweisman/baby_mental_life_ms/blob/master/outputs/fig01.jpg?raw=TRUE)
 
 _**Figure 1**: Factor loadings from an exploratory factor analysis of participants’ capacity attributions to newborns, 9-month-old infants, and 5-year-old children in Study 1._
 
-![Figure 2](https://github.com/kgweisman/baby_mental_life_ms/blob/master/outputs/fig02.pdf?raw=TRUE)
+![Figure 2](https://github.com/kgweisman/baby_mental_life_ms/blob/master/outputs/fig02.jpg?raw=TRUE)
 
 _**Figure 2**: Perceived developmental trajectories for four domains of mental life (Studies 2-3). Lighter lines represent individual participants’ responses, black points correspond to mean responses across the sample, error bars are bootstrapped 95% confidence intervals, and thick red lines are predictions from our generalized additive models (beta regressions). In Study 2 (Panel A), participants assessed 5 capacities within each domain, and assessed all capacities for a given target age before moving on to the next target age. In Study 3 (Panel B), participants assessed 2 capacities within each domain, and assessed a single capacity for all target ages before moving on to the next capacity._
 
-![Figure 3](https://github.com/kgweisman/baby_mental_life_ms/blob/master/outputs/fig03.pdf?raw=TRUE)
+![Figure 3](https://github.com/kgweisman/baby_mental_life_ms/blob/master/outputs/fig03.jpg?raw=TRUE)
 
 _**Figure 3**: Perceived importance of various mechanisms in the development of four domains of mental life (Study 3); see main text for the full text of each mechanism. Panel A shows ratings for each developmental mechanism and both of the capacities within each domain; Panel B shows mean ratings for extrinsic vs. intrinsic mechanisms for each domain of capacities; and Panel C shows the percentage of trials on which participants selected extrinsic vs. intrinsic mechanisms as the 'most important' driver of development. Lighter points and lines represent individual participants’ responses, black points correspond to mean scores across the sample, and error bars are bootstrapped 95% confidence intervals. The dotted red line at the midpoint of the response scale in Panels A and B is intended to aid visual comparison across domains._
 
