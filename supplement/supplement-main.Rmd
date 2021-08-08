@@ -5,7 +5,7 @@ author:
   - Kara Weisman^[Department of Psychology, University of California, Riverside; kgweisman@gmail.com]
   - Lucy S. King^[Department of Psychiatry and Behavioral Sciences, Tulane University School of Medicine; Department of Psychology, The University of Texas at Austin]
   - Kathryn L. Humprheys^[Department of Psychology, Vanderbilt University]
-date: "August 7, 2021"
+date: "August 8, 2021"
 output:
   # word_document:
   #   reference_docx: word-styles-ref.docx
@@ -67,7 +67,7 @@ suppressWarnings(suppressMessages(source("../code/data_prep_s3.R",
 
 
 \newpage
-In a series of large-scale studies we assessed how US adults conceptualize the development of the human mind over the first five years of life. We identified four distinct suites of mental capacities that are perceived by US adults to develop over human infancy and early childhood, _bodily sensations_, _negative affect_, _social connection_, and _cognition and control_ (Study 1); charted how these different aspects of mental life are perceived to change over the first five years of a child's life (Studies 2-3); and explored the lay theories that underlie the observed differences in the perceived developmental trajectories of these four aspects of mental life (Study 3). 
+In a series of large-scale studies we assessed how US adults conceptualize the development of the human mind over the first five years of life. We identified four distinct suites of mental capacities that are perceived by US adults to develop over human infancy and early childhood, _bodily sensations_, _negative affect_, _social connection_, and _cognition and control_ (Study 1); charted how these different aspects of mental life are perceived to change over the first five years of a child's life (Studies 2-3); and explored the intuitive theories that underlie the observed differences in the perceived developmental trajectories of these four aspects of mental life (Study 3). 
 
 In these Supplemental Materials, we provide extended information about the methods and results presented in the main paper, present additional results, and provide an item-by-item comparison of the capacity items used here to items used in previous work on mind perception [@gray.etal2007; @weisman.etal2017a; @weisman.etal2017b; @malle2019].
 
@@ -85,7 +85,7 @@ s3_results <- readRDS("../outputs/s3_results.rds")
 # ALSO NOTE: if you encounter problems knitting, try clearing the knit cache.
 ```
 
-Methods, inclusion/exclusion criteria, and analyses marked as "preregistered" were preregistered on the Open Science Framework (OSF) website: (Study 1: https://osf.io/e6ajh/; Study 2: https://osf.io/j72dg; Study 3: https://osf.io/xh8ce/). All studies were approved by the Stanford University Internal Review Board.
+Methods, inclusion/exclusion criteria, and analyses marked as "preregistered" were preregistered on the Open Science Framework (OSF) website: (Study 1: https://osf.io/e6ajh/; Study 2: https://osf.io/j72dg; Study 3: https://osf.io/xh8ce/). All materials used in these studies are available in the following OSF repository: https://osf.io/xrznd/ (DOI: 10.17605/OSF.IO/XRZND). All studies were approved by the Stanford University Internal Review Board.
 
 ## Study 1
 
@@ -970,7 +970,7 @@ saveRDS(s2_results, "../outputs/s2_results.rds")
 
 ## Study 3
 
-As described in the main text, Study 3 was designed with two goals in mind: First, we aimed to provide a more direct assessment of the differences in perceived developmental trajectories surfaced by Study 2. Second, we aimed to probe the lay theories that might underlie the differentiation of the four factors surfaced by Studies 1-2 and the perceived developmental trajectories surfaced by Study 2 (and the current study).
+As described in the main text, Study 3 was designed with two goals in mind: First, we aimed to provide a more direct assessment of the differences in perceived developmental trajectories surfaced by Study 2. Second, we aimed to probe the intuitive theories that might underlie the differentiation of the four factors surfaced by Studies 1-2 and the perceived developmental trajectories surfaced by Study 2 (and the current study).
 
 In the main text, we presented the results of a generalized additive model (GAM) predicting participants' capacity ratings as a function of target age, domain, and interactions between them; briefly described the dimensionality reduction analyses we used to group developmental mechanisms into two types ("intrinsic" and "extrinsic"); presented the results of a multilevel linear regression model predicting participants' ratings of developmental mechanisms as a function of mechanism type, domain, and an interaction between them; briefly mentioned additional models of each domain separately; and provided visualizations of participants' selections of the "most important" mechanism for each capacity, by domain. Here, we present the full results of all of these models, as well as the results of a multilevel logistic regression model of the selection of "most important" mechanism.
 
@@ -1180,7 +1180,7 @@ if (resave_plots == T | !file.exists("../outputs/fig02.jpg")) {
 
 ### Developmental mechanisms: Ratings
 
-As a first step in assessing the lay theories underlying these perceptions of the development of human mental life, we asked participants to assess the importance of a variety of possible developmental mechanisms for each of the capacities included in this study. We assessed a wide range of potential developmental mechanisms for children's capacities. We applied a variety of dimensionality reduction approaches in order to sort these developmental mechanisms into meaningful categories, and then modeled participants' ratings of the importance of these mechanism as a function of domain (_bodily sensations_, _negative affect_, _social connection_, and _cognition and control_). 
+As a first step in assessing the intuitive theories underlying these perceptions of the development of human mental life, we asked participants to assess the importance of a variety of possible developmental mechanisms for each of the capacities included in this study. We assessed a wide range of potential developmental mechanisms for children's capacities. We applied a variety of dimensionality reduction approaches in order to sort these developmental mechanisms into meaningful categories, and then modeled participants' ratings of the importance of these mechanism as a function of domain (_bodily sensations_, _negative affect_, _social connection_, and _cognition and control_). 
 
 ```{r s3 mech ratings datasets a}
 d3_mech_ratings_wide <- d3_dev_factor_rating %>%
