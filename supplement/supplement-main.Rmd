@@ -4,8 +4,8 @@ subtitle: "Supplemental Materials"
 author:
   - Kara Weisman^[Department of Psychology, University of California, Riverside; kgweisman@gmail.com]
   - Lucy S. King^[Department of Psychiatry and Behavioral Sciences, Tulane University School of Medicine; Department of Psychology, The University of Texas at Austin]
-  - Kathryn L. Humprheys^[Department of Psychology, Vanderbilt University]
-date: "August 8, 2021"
+  - Kathryn L. Humphreys^[Department of Psychology, Vanderbilt University]
+date: "August 9, 2021"
 output:
   # word_document:
   #   reference_docx: word-styles-ref.docx
@@ -113,7 +113,7 @@ This process yielded a list of 60 capacities. Roughly half of this list (29 of 6
 
 The other half (31 of 60 items) were novel items, not used in previous studies of mind perception, but common in clinical assessments of infant temperament and behavior: "being afraid of somebody", "being angry at somebody", "being comforted by physical touch", "calming themselves down", "controlling their emotions", "detecting danger", "feeling annoyed", "feeling bored", "feeling confused", "feeling distressed", "feeling excited", "feeling frustrated", "feeling helpless", "feeling hopeless", "feeling lonely", "feeling neglected", "feeling overwhelmed", "feeling physically uncomfortable", "feeling textures (for example, 'smooth', 'rough')", "feeling thirsty", "feeling too hot or too cold", "feeling worried", "finding something funny", "focusing on a goal", "getting pleasure from music", "imagining things", "learning from other people", "listening to somebody", "loving somebody", "thinking before they act", and "understanding what somebody else is thinking".
 
-(See \@ref(label:"Selection of capacities: Comparison to previous studies")  for an item-by-item comparison of the capacities used here to those used in previous studies of mind perception [@gray.etal2007; @weisman.etal2017a; @weisman.etal2017b; @malle2019].)
+See "Selection of capacities: Comparison to previous studies" for an item-by-item comparison of the capacities used here to those used in previous studies of mind perception [@gray.etal2007; @weisman.etal2017a; @weisman.etal2017b; @malle2019].
 
 Capacities were presented in a random order each time they were displayed (i.e., order varied across both target ages and participants).
 
