@@ -5,7 +5,7 @@ author:
   - Kara Weisman^[Department of Psychology, University of California, Riverside; kgweisman@gmail.com]
   - Lucy S. King^[Department of Psychiatry and Behavioral Sciences, Tulane University School of Medicine; Department of Psychology, The University of Texas at Austin]
   - Kathryn L. Humphreys^[Department of Psychology, Vanderbilt University]
-date: "August 9, 2021"
+date: "August 12, 2021"
 output:
   # word_document:
   #   reference_docx: word-styles-ref.docx
@@ -883,11 +883,11 @@ tabs2gam %>%
 
 ```{r s2 gam predictions}
 d2_gam_r1_pred <- d2_gam %>%
-  mutate(pred_score = predict.gam(s2_gam$gam, type = "response", 
-                                  newdata = d2_gam)) %>%
+  mutate(pred = predict.gam(s2_gam$gam, type = "response", 
+                            newdata = d2_gam)) %>%
   group_by(ResponseId, factor, target_year) %>%
   summarise(score = mean(response, na.rm = T),
-            pred_score = mean(score, na.rm = T)) %>%
+            pred_score = mean(pred, na.rm = T)) %>%
   ungroup()
 ```
 
@@ -1088,7 +1088,7 @@ d3_gam_r1_pred <- d3_gam %>%
                             newdata = d3_gam)) %>%
   group_by(ResponseId, factor, target_year) %>%
   summarise(score = mean(response, na.rm = T),
-            pred_score = mean(score, na.rm = T)) %>%
+            pred_score = mean(pred, na.rm = T)) %>%
   ungroup()
 ```
 
