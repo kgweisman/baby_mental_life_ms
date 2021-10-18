@@ -85,7 +85,11 @@ s3_results <- readRDS("../outputs/s3_results.rds")
 # ALSO NOTE: if you encounter problems knitting, try clearing the knit cache.
 ```
 
-Methods, inclusion/exclusion criteria, and analyses marked as "preregistered" were preregistered on the Open Science Framework (OSF) website: (anonymized links for peer review: Study 1: https://osf.io/e6ajh/?view_only=f2539dbce3664172907aa7a381f62d34; Study 2: https://osf.io/j72dg/?view_only=7e4c01fec32f40a3b13c0ebc2b7ced18; Study 3: https://osf.io/xh8ce/?view_only=56649aff37aa4f1db2dc06b2e69576f4). All studies were approved by [IRB information removed to preserve anonymity]. All materials used in these studies are available in the following OSF repository (anonymized link: https://osf.io/xrznd/?view_only=d9eb55e46028453cbd90534a003d3f52 (DOI: 10.17605/OSF.IO/XRZND). All studies were approved by [IRB information removed to preserve anonymity].
+Methods, inclusion/exclusion criteria, and analyses marked as "preregistered" were preregistered on the Open Science Framework (OSF) website: (anonymized links for peer review: Study 1: https://osf.io/e6ajh/?view_only=f2539dbce3664172907aa7a381f62d34; Study 2: https://osf.io/j72dg/?view_only=7e4c01fec32f40a3b13c0ebc2b7ced18; Study 3: https://osf.io/xh8ce/?view_only=56649aff37aa4f1db2dc06b2e69576f4). 
+
+All materials used in these studies are available in the following OSF repository (anonymized link: https://osf.io/xrznd/?view_only=d9eb55e46028453cbd90534a003d3f52 (DOI: 10.17605/OSF.IO/XRZND).
+
+All studies were approved by [IRB information removed to preserve anonymity]. 
 
 
 ## Study 1
