@@ -799,6 +799,44 @@ d2_cap_ratings <- d2_all %>%
   left_join(d2_scales %>% distinct(factor, capacity))
 ```
 
+```{r s2 cap ratings reliability}
+d2_cap_ratings %>%
+  unite(ResponseId_target, c(ResponseId, target)) %>%
+  distinct(ResponseId_target, factor, capacity, response) %>%
+  filter(factor == "Bodily sensation") %>%
+  select(-factor) %>%
+  spread(capacity, response) %>%
+  column_to_rownames("ResponseId_target") %>%
+  psych::alpha()
+
+d2_cap_ratings %>%
+  unite(ResponseId_target, c(ResponseId, target)) %>%
+  distinct(ResponseId_target, factor, capacity, response) %>%
+  filter(factor == "Negative affect") %>%
+  select(-factor) %>%
+  spread(capacity, response) %>%
+  column_to_rownames("ResponseId_target") %>%
+  psych::alpha()
+
+d2_cap_ratings %>%
+  unite(ResponseId_target, c(ResponseId, target)) %>%
+  distinct(ResponseId_target, factor, capacity, response) %>%
+  filter(factor == "Social connection") %>%
+  select(-factor) %>%
+  spread(capacity, response) %>%
+  column_to_rownames("ResponseId_target") %>%
+  psych::alpha()
+
+d2_cap_ratings %>%
+  unite(ResponseId_target, c(ResponseId, target)) %>%
+  distinct(ResponseId_target, factor, capacity, response) %>%
+  filter(factor == "Cognition and control") %>%
+  select(-factor) %>%
+  spread(capacity, response) %>%
+  column_to_rownames("ResponseId_target") %>%
+  psych::alpha()
+```
+
 ```{r s2 cap ratings summary stats}
 d2_cap_ratings_sum <- d2_cap_ratings %>%
   group_by(factor, target_year) %>%
@@ -1020,6 +1058,44 @@ d3_cap_ratings <- d3 %>%
                                 "POS" = "Social connection",
                                 "COG" = "Cognition and control")) %>%
   select(-domain)
+```
+
+```{r s3 cap ratings reliability}
+d3_cap_ratings %>%
+  unite(ResponseId_target, c(ResponseId, target)) %>%
+  distinct(ResponseId_target, factor, capacity, response) %>%
+  filter(factor == "Bodily sensation") %>%
+  select(-factor) %>%
+  spread(capacity, response) %>%
+  column_to_rownames("ResponseId_target") %>%
+  psych::alpha()
+
+d3_cap_ratings %>%
+  unite(ResponseId_target, c(ResponseId, target)) %>%
+  distinct(ResponseId_target, factor, capacity, response) %>%
+  filter(factor == "Negative affect") %>%
+  select(-factor) %>%
+  spread(capacity, response) %>%
+  column_to_rownames("ResponseId_target") %>%
+  psych::alpha()
+
+d3_cap_ratings %>%
+  unite(ResponseId_target, c(ResponseId, target)) %>%
+  distinct(ResponseId_target, factor, capacity, response) %>%
+  filter(factor == "Social connection") %>%
+  select(-factor) %>%
+  spread(capacity, response) %>%
+  column_to_rownames("ResponseId_target") %>%
+  psych::alpha()
+
+d3_cap_ratings %>%
+  unite(ResponseId_target, c(ResponseId, target)) %>%
+  distinct(ResponseId_target, factor, capacity, response) %>%
+  filter(factor == "Cognition and control") %>%
+  select(-factor) %>%
+  spread(capacity, response) %>%
+  column_to_rownames("ResponseId_target") %>%
+  psych::alpha()
 ```
 
 ```{r s3 cap ratings summary stats}
@@ -1492,7 +1568,7 @@ model_parameters(s3_lmer, standardize = "refit") %>%
   kable_styling(latex_options = c("repeat_header"), font_size = 8)
 ```
 
-##### bodily sensation
+##### Bodily sensation
 
 For capacities in the domain of _bodily sensation_, this analysis suggested that participants rated intrinsic mechanisms as more important drivers of development than extrinsic mechanisms; see also Figure 3, panels A-B (main text).
 
