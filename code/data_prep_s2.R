@@ -218,7 +218,8 @@ d2_demo <- d2 %>%
                              "10 - 18 years",
                              "> 18 years",
                              "My Youngest child is deceased",
-                             "Prefer not to say")))  
+                             "Prefer not to say"))) %>%
+  mutate(ResponseId = as.character(ResponseId))
 
 # all assessments of ALL TARGETS, RepsonseId as rownames
 d2_all <- d2 %>% 

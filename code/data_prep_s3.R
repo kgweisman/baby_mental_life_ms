@@ -356,7 +356,8 @@ d3_cap_rating <- d3 %>%
                                     "target60mo" = "5-year-olds")) %>%
   left_join(capacities_s3) %>%
   select(ResponseId, target, target_num, target_ord, 
-         domain, capacity, response)
+         domain, capacity, response) %>%
+  mutate(ResponseId = as.character(ResponseId))
 
 # dev_factor ratings for ALL TARGETS, ALL CAPACITIES
 d3_dev_factor_rating <- d3 %>% 
@@ -378,7 +379,8 @@ d3_dev_factor_rating <- d3 %>%
                                         "experiments",
                                         "observes_people",
                                         "interacts_people",
-                                        "people_teach")))
+                                        "people_teach"))) %>%
+  mutate(ResponseId = as.character(ResponseId))
 
 # dev_factor "most important" for ALL TARGETS, ALL CAPACITIES
 d3_dev_factor_most_important <- d3 %>% 
@@ -404,7 +406,8 @@ d3_dev_factor_most_important <- d3 %>%
 
 d3_dev_factor_most_important_choice <- d3_dev_factor_most_important %>%
   filter(!is.na(response), response != "", !grepl("free", question)) %>%
-  select(-dev_factor, -question)
+  select(-dev_factor, -question) %>%
+  mutate(ResponseId = as.character(ResponseId))
 
 # # check for duplicates/redundancies
 # d3_dev_factor_most_important_choice %>%
@@ -413,7 +416,8 @@ d3_dev_factor_most_important_choice <- d3_dev_factor_most_important %>%
 
 d3_dev_factor_most_important_free <- d3_dev_factor_most_important %>%
   filter(!is.na(response), response != "", grepl("free", question)) %>%
-  select(-dev_factor, -question)
+  select(-dev_factor, -question) %>%
+  mutate(ResponseId = as.character(ResponseId))
 
 rm(d3_dev_factor_most_important)
 
@@ -452,7 +456,8 @@ d3_dev_factor_other <- d3 %>%
          !grepl("nothing to add", tolower(response)),
          !grepl("can't think of any", tolower(response)),
          !grepl("don't think so", tolower(response)),
-         !grepl("don\\;t think so", tolower(response)))
+         !grepl("don\\;t think so", tolower(response))) %>%
+  mutate(ResponseId = as.character(ResponseId))
 
 d3 <- d3_cap_rating
 
