@@ -1366,9 +1366,9 @@ d3_mech_ratings_wide <- d3_dev_factor_rating %>%
 
 #### Regression models
 
-To assess which developmental mechanisms were considered to be the most or least important in the development of each of the individual mental capacities included in this study (*bodily sensation*, *negative affect*, *social connection*, and *cognition and control*), we conducted a multilevel linear regression regressing responses to this question onto type of developmental mechanism (extrinsic vs. intrinsic), domain, and an interaction between them, including the maximal random effects structure that allowed the model to converge. Using the "lme4" package for R [@bates.etal2015], we specified this model as follows: _lmer(response ~ mechanism type * domain + (1 + mechanism type + domain | participant) + (1 | developmental mechanism) + (1 | capacity)_. We also conducted separate, analogous regression analyses for each domain separately. In these analyses, mechanism type and domain were effect-coded for comparisons to the grand mean collapsing across mechanism types and domains. (Note that these analyses omitted the mechanism "the child's brain changes [...]", because it was the only mechanism that was difficult to classify as either intrinsic or extrinsic via EFA and clustering analyses; see previous section.)
+To supplement our visual assessment of which developmental mechanisms were considered to be the most or least important in the development of each of the individual mental capacities included in this study (*bodily sensation*, *negative affect*, *social connection*, and *cognition and control*), we conducted a series of multilevel linear regression models, regressing responses to this question onto domain, including the maximal random effects structure that allowed the model to converge. Using the "lme4" package for R [@bates.etal2015], we specified these models as follows: _lmer(response ~ domain + (1 | participant) + (1 | capacity)_. In these analyses, domain and developmental mechanism were both effect-coded for comparisons to the grand mean collapsing across domains and mechanisms.
 
-The full results of these models are presented in Supplementary Tables \@ref(tab:tabs3lmerall) (all domains), \@ref(tab:tabs3lmerbod) (*bodily sensation*), \@ref(tab:tabs3lmerneg) (*negative affect*), \@ref(tab:tabs3lmersoc) (*social connection*), and \@ref(tab:tabs3lmercog) (*cognition and control*); see also Figure 3 (main text).
+The full results of these models are presented in Supplementary Tables xxxxxxx; see also Figure 3 (main text).
 
 ```{r s3 mech ratings datasets b}
 d3_mech_ratings <- d3_dev_factor_rating %>%
@@ -1377,17 +1377,7 @@ d3_mech_ratings <- d3_dev_factor_rating %>%
                                 "NEG" = "Negative affect",
                                 "POS" = "Social connection",
                                 "COG" = "Cognition and control")) %>%
-  select(-domain) %>%
-  mutate(dev_factor_cluster = case_when(
-    dev_factor %in% c("senses_improve", "body_grows", 
-                      "womb_experiences", "preprogrammed") ~ "intrinsic",
-    dev_factor %in% c("interacts_people", "observes_people", "observes_objects", 
-                      "people_teach", "experiments") ~ "extrinsic",
-    dev_factor == "brain_changes" ~ NA_character_,
-    TRUE ~ NA_character_
-  )) %>%
-  mutate(dev_factor_cluster = factor(dev_factor_cluster,
-                                     levels = c("intrinsic", "extrinsic")))
+  select(-domain)
 
 contrasts(d3_mech_ratings$factor) <- cbind(bod_gm = c(1, -1, 0, 0),
                                            soc_gm = c(0, -1, 1, 0),
@@ -1397,85 +1387,62 @@ contrasts(d3_mech_ratings$factor) <- cbind(bod_gm = c(1, -1, 0, 0),
 #                                            neg_gm = c(0, 1, -1, 0),
 #                                            cog_gm = c(0, 0, -1, 1))
 
-contrasts(d3_mech_ratings$dev_factor_cluster) <- cbind(ext_gm = c(-1, 1))
+contrasts(d3_mech_ratings$dev_factor) <- cbind(
+  womb_gm = c(-1, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+  body_gm = c(-1, 0, 1, 0, 0, 0, 0, 0, 0, 0),
+  brai_gm = c(-1, 0, 0, 1, 0, 0, 0, 0, 0, 0),
+  sens_gm = c(-1, 0, 0, 0, 1, 0, 0, 0, 0, 0),
+  obso_gm = c(-1, 0, 0, 0, 0, 1, 0, 0, 0, 0),
+  expt_gm = c(-1, 0, 0, 0, 0, 0, 1, 0, 0, 0),
+  obsp_gm = c(-1, 0, 0, 0, 0, 0, 0, 1, 0, 0),
+  intp_gm = c(-1, 0, 0, 0, 0, 0, 0, 0, 1, 0),
+  teac_gm = c(-1, 0, 0, 0, 0, 0, 0, 0, 0, 1))
 ```
 
 ```{r s3 mech ratings summary stats}
 # overall
 d3_mech_ratings_sum_a <- d3_mech_ratings %>%
-  filter(!is.na(dev_factor_cluster)) %>%
-  # participant-level mean of means for each cluster
-  group_by(ResponseId, dev_factor_cluster) %>%
+  # participant-level mean of means for each mechanism
+  group_by(ResponseId, dev_factor) %>%
   summarise(score_a = mean(response, na.rm = T)) %>%
   ungroup() %>%
-  # group-level mean of means for each cluster 
-  group_by(dev_factor_cluster) %>%
+  # group-level mean of means for each mechanism 
+  group_by(dev_factor) %>%
   summarise(median = median(score_a, na.rm = T),
             mean = mean(score_a, na.rm = T),
             sd = sd(score_a, na.rm = T)) %>%
   ungroup() %>%
-  arrange(dev_factor_cluster)
+  arrange(dev_factor)
 
 d3_mech_ratings_sum_a %>%
   mutate_if(is.numeric, funs(round_x(., 2)))
 
 # by domain
 d3_mech_ratings_sum_b <- d3_mech_ratings %>%
-  filter(!is.na(dev_factor_cluster)) %>%
   # participant-level mean for each mechanism, for each domain
-  group_by(ResponseId, dev_factor_cluster, dev_factor, factor) %>%
+  group_by(ResponseId, dev_factor, factor) %>%
   summarise(score_a = mean(response, na.rm = T)) %>%
   ungroup() %>%
-  # participant-level mean of means for each cluster, for each domain
-  group_by(ResponseId, dev_factor_cluster, factor) %>%
-  summarise(score_b = mean(score_a, na.rm = T)) %>%
-  ungroup() %>%
   # group-level mean of means of means for each domain 
-  group_by(dev_factor_cluster, factor) %>%
-  summarise(median = median(score_b, na.rm = T),
-            mean = mean(score_b, na.rm = T),
-            sd = sd(score_b, na.rm = T)) %>%
+  group_by(factor, dev_factor) %>%
+  summarise(median = median(score_a, na.rm = T),
+            mean = mean(score_a, na.rm = T),
+            sd = sd(score_a, na.rm = T)) %>%
   ungroup() %>%
-  arrange(factor, dev_factor_cluster)
+  arrange(factor, dev_factor)
 
 d3_mech_ratings_sum_b %>%
   mutate_if(is.numeric, funs(round_x(., 2)))
-
-# mean DIFFERENCES by domain
-d3_mech_ratings_sum_c <- d3_mech_ratings %>%
-  filter(!is.na(dev_factor_cluster)) %>%
-  # participant-level mean for each cluster, for each capacity
-  group_by(ResponseId, dev_factor_cluster, factor, capacity) %>%
-  summarise(score_a = mean(response, na.rm = T)) %>%
-  ungroup() %>%
-  # participant-level cluster differences for each capacity
-  spread(dev_factor_cluster, score_a) %>%
-  mutate(diff_a = extrinsic - intrinsic) %>%
-  select(-extrinsic, -intrinsic) %>%
-  # participant-level mean differences, for each domain
-  group_by(ResponseId, factor) %>%
-  summarise(diff_b = mean(diff_a, na.rm = T)) %>%
-  ungroup() %>%
-  # group-level mean of means of mean differences, for each domain 
-  group_by(factor) %>%
-  summarise(median = median(diff_b, na.rm = T),
-            mean = mean(diff_b, na.rm = T),
-            sd = sd(diff_b, na.rm = T)) %>%
-  ungroup() %>%
-  arrange(factor)
-
-d3_mech_ratings_sum_c %>%
-  mutate_if(is.numeric, funs(round_x(., 2)))
 ```
 
-##### All domains
 
-In brief, this analysis suggested that, collapsing across domains, intrinsic and extrinsic mechanisms were rated as equally important, but that the difference between intrinsic and extrinsic mechanisms varied across domains (see interaction terms). 
+##### All mechanisms
+
+In brief, this analysis suggested that the perceived importance of these developmental mechanisms varied both overall (see main effects) and across domains (see interaction terms).
 
 ```{r s3 mech ratings lmer}
-s3_lmer <- lmer(response ~ dev_factor_cluster * factor + 
-                  (1 + dev_factor_cluster + factor | ResponseId) + 
-                  (1 | dev_factor) +
+s3_lmer <- lmer(response ~ dev_factor * factor + 
+                  (1 | ResponseId) + 
                   (1 | capacity),
                 control = lmerControl(optimizer = "bobyqa"),
                 data = d3_mech_ratings)
@@ -1491,7 +1458,15 @@ model_parameters(s3_lmer, standardize = "refit") %>%
   mutate(Parameter = case_when(
     Parameter == "(Intercept)" ~ "Grand mean (GM) (intercept)",
     TRUE ~ Parameter)) %>%
-  mutate(Parameter = gsub("dev_factor_clusterext_gm", "Mechanism type (Extrinsic vs. GM)", Parameter)) %>%
+  mutate(Parameter = gsub("dev_factorwomb_gm", "Mechanism (Experiences in the womb vs. GM)", Parameter)) %>%
+  mutate(Parameter = gsub("dev_factorbody_gm", "Mechanism (Body grows and matures vs. GM)", Parameter)) %>%
+  mutate(Parameter = gsub("dev_factorbrai_gm", "Mechanism (Brain changes vs. GM)", Parameter)) %>%
+  mutate(Parameter = gsub("dev_factorsens_gm", "Mechanism (Senses improve vs. GM)", Parameter)) %>%
+  mutate(Parameter = gsub("dev_factorobso_gm", "Mechanism (Observes objects and physical world vs. GM)", Parameter)) %>%
+  mutate(Parameter = gsub("dev_factorexpt_gm", "Mechanism (Actively experiments vs. GM)", Parameter)) %>%
+  mutate(Parameter = gsub("dev_factorobsp_gm", "Mechanism (Observes people vs. GM)", Parameter)) %>%
+  mutate(Parameter = gsub("dev_factorintp_gm", "Mechanism (Interacts with people vs. GM)", Parameter)) %>%
+  mutate(Parameter = gsub("dev_factorteac_gm", "Mechanism (People explicitly teach vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorbod_gm", "Bodily sensation (vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorsoc_gm", "Social connection (vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorcog_gm", "Cognition and control (vs. GM)", Parameter)) %>%
@@ -1503,35 +1478,33 @@ model_parameters(s3_lmer, standardize = "refit") %>%
   rename(df = df_error) %>%
   kable("latex", booktabs = T, longtable = T,
         caption = "Study 3, multilevel linear model results (all domains): Fixed effects.",
-        digits = 2, align = c("lrrrrrr")) %>%
+        digits = 2, align = c("lrrrrrrrrrrrrrr")) %>%
   kable_styling(latex_options = c("repeat_header"), font_size = 8)
 ```
 
-##### Bodily sensation
+##### Biologically 'preprogrammed'
 
-For capacities in the domain of _bodily sensation_, this analysis suggested that participants rated intrinsic mechanisms as more important drivers of development than extrinsic mechanisms; see also Figure 3, panels A-B (main text).
+For the mechanism "the child is biologically 'preprogrammed' to have this ability," this analysis suggested that participants rated this as a particularly important driver of development in the domain of _bodily sensation_, and a relatively unimportant driver of development in the domain of _cognition and control_. See also Figure 3, first row (main text).
 
-```{r s3 mech ratings lmer bod}
-s3_lmer_bod <- lmer(response ~ dev_factor_cluster + 
-                      (1 + dev_factor_cluster | ResponseId) + 
-                      (1 | dev_factor) + 
-                      (1 | capacity),
+```{r s3 mech ratings lmer prep}
+s3_lmer_prep <- lmer(response ~ factor +
+                       (1 | ResponseId) +
+                       (1 | capacity),
                 control = lmerControl(optimizer = "bobyqa"),
-                data = d3_mech_ratings %>% 
-                  filter(factor == "Bodily sensation"))
+                data = d3_mech_ratings %>%
+                  filter(dev_factor == "preprogrammed"))
 
-summary(s3_lmer_bod)
-# model_parameters(s3_lmer)
+summary(s3_lmer_prep)
+# model_parameters(s3_lmer_prep)
 ```
 
-```{r tabs3lmerbod, include = T, message = F, warning = F}
-model_parameters(s3_lmer_bod, standardize = "refit") %>%
+```{r tabs3lmerprep, include = T, message = F, warning = F}
+model_parameters(s3_lmer_prep, standardize = "refit") %>%
   filter(Effects == "fixed") %>%
   select(Parameter, Coefficient, SE, CI_low, CI_high, t, df_error, p) %>%
   mutate(Parameter = case_when(
     Parameter == "(Intercept)" ~ "Grand mean (GM) (intercept)",
     TRUE ~ Parameter)) %>%
-  mutate(Parameter = gsub("dev_factor_clusterext_gm", "Mechanism type (Extrinsic vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorbod_gm", "Bodily sensation (vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorsoc_gm", "Social connection (vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorcog_gm", "Cognition and control (vs. GM)", Parameter)) %>%
@@ -1542,36 +1515,34 @@ model_parameters(s3_lmer_bod, standardize = "refit") %>%
   select(Parameter, Coefficient, `95% CI`, everything()) %>%
   rename(df = df_error) %>%
   kable("latex", booktabs = T, longtable = T,
-        caption = "Study 3, multilevel linear model results (bodily sensation): Fixed effects.",
+        caption = "Study 3, multilevel linear model results (biologically 'preprogrammed'): Fixed effects.",
         digits = 2, align = c("lrrrrrr")) %>%
   kable_styling(latex_options = c("repeat_header"), font_size = 8)
 ```
 
-##### Negative affect
+##### Experiences in the womb
 
-For capacities in the domain of _negative affect_, this analysis suggested that participants rated intrinsic and extrinsic mechanisms as equally important drivers of development; see also Figure 3, panels A-B (main text).
+For the mechanism "the child has experiences in the womb that give them this ability," this analysis suggested that participants rated this as a particularly important driver of development in the domain of _bodily sensation_, and a relatively unimportant driver of development in the domain of _cognition and control_. See also Figure 3, second row (main text).
 
-```{r s3 mech ratings lmer neg}
-s3_lmer_neg <- lmer(response ~ dev_factor_cluster + 
-                      (1 + dev_factor_cluster | ResponseId) + 
-                      (1 | dev_factor) + 
-                      (1 | capacity),
+```{r s3 mech ratings lmer womb}
+s3_lmer_womb <- lmer(response ~ factor +
+                       (1 | ResponseId) +
+                       (1 | capacity),
                 control = lmerControl(optimizer = "bobyqa"),
-                data = d3_mech_ratings %>% 
-                  filter(factor == "Negative affect"))
+                data = d3_mech_ratings %>%
+                  filter(dev_factor == "womb_experiences"))
 
-summary(s3_lmer_neg)
-# model_parameters(s3_lmer)
+summary(s3_lmer_womb)
+# model_parameters(s3_lmer_womb)
 ```
 
-```{r tabs3lmerneg, include = T, message = F, warning = F}
-model_parameters(s3_lmer_neg, standardize = "refit") %>%
+```{r tabs3lmerwomb, include = T, message = F, warning = F}
+model_parameters(s3_lmer_womb, standardize = "refit") %>%
   filter(Effects == "fixed") %>%
   select(Parameter, Coefficient, SE, CI_low, CI_high, t, df_error, p) %>%
   mutate(Parameter = case_when(
     Parameter == "(Intercept)" ~ "Grand mean (GM) (intercept)",
     TRUE ~ Parameter)) %>%
-  mutate(Parameter = gsub("dev_factor_clusterext_gm", "Mechanism type (Extrinsic vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorbod_gm", "Bodily sensation (vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorsoc_gm", "Social connection (vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorcog_gm", "Cognition and control (vs. GM)", Parameter)) %>%
@@ -1582,36 +1553,34 @@ model_parameters(s3_lmer_neg, standardize = "refit") %>%
   select(Parameter, Coefficient, `95% CI`, everything()) %>%
   rename(df = df_error) %>%
   kable("latex", booktabs = T, longtable = T,
-        caption = "Study 3, multilevel linear model results (negative affect): Fixed effects.",
+        caption = "Study 3, multilevel linear model results (experiences in the womb): Fixed effects.",
         digits = 2, align = c("lrrrrrr")) %>%
   kable_styling(latex_options = c("repeat_header"), font_size = 8)
 ```
 
-##### Social connection
+##### Body grows and matures
 
-For capacities in the domain of _social connection_, this analysis suggested that participants rated extrinsic mechanisms as more important drivers of development than intrinsic mechanisms; see also Figure 3, panels A-B (main text).
+For the mechanism "the child’s body grows and matures (for example, muscles get stronger, child gets taller)," this analysis revealed no significant differences in importance ratings across domains. See also Figure 3, third row (main text).
 
-```{r s3 mech ratings lmer soc}
-s3_lmer_soc <- lmer(response ~ dev_factor_cluster + 
-                      (1 + dev_factor_cluster | ResponseId) + 
-                      (1 | dev_factor) + 
-                      (1 | capacity),
+```{r s3 mech ratings lmer body}
+s3_lmer_body <- lmer(response ~ factor +
+                       (1 | ResponseId) +
+                       (1 | capacity),
                 control = lmerControl(optimizer = "bobyqa"),
-                data = d3_mech_ratings %>% 
-                  filter(factor == "Social connection"))
+                data = d3_mech_ratings %>%
+                  filter(dev_factor == "body_grows"))
 
-summary(s3_lmer_soc)
-# model_parameters(s3_lmer)
+summary(s3_lmer_body)
+# model_parameters(s3_lmer_body)
 ```
 
-```{r tabs3lmersoc, include = T, message = F, warning = F}
-model_parameters(s3_lmer_soc, standardize = "refit") %>%
+```{r tabs3lmerbody, include = T, message = F, warning = F}
+model_parameters(s3_lmer_body, standardize = "refit") %>%
   filter(Effects == "fixed") %>%
   select(Parameter, Coefficient, SE, CI_low, CI_high, t, df_error, p) %>%
   mutate(Parameter = case_when(
     Parameter == "(Intercept)" ~ "Grand mean (GM) (intercept)",
     TRUE ~ Parameter)) %>%
-  mutate(Parameter = gsub("dev_factor_clusterext_gm", "Mechanism type (Extrinsic vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorbod_gm", "Bodily sensation (vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorsoc_gm", "Social connection (vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorcog_gm", "Cognition and control (vs. GM)", Parameter)) %>%
@@ -1622,36 +1591,34 @@ model_parameters(s3_lmer_soc, standardize = "refit") %>%
   select(Parameter, Coefficient, `95% CI`, everything()) %>%
   rename(df = df_error) %>%
   kable("latex", booktabs = T, longtable = T,
-        caption = "Study 3, multilevel linear model results (social connection): Fixed effects.",
+        caption = "Study 3, multilevel linear model results (experiences in the womb): Fixed effects.",
         digits = 2, align = c("lrrrrrr")) %>%
   kable_styling(latex_options = c("repeat_header"), font_size = 8)
 ```
 
-##### Cognition and control
+##### Brain changes
 
-For capacities in the domain of _cognition and control_, this analysis suggested that participants rated extrinsic mechanisms as much more important drivers of development than intrinsic mechanisms; see also Figure 3, panels A-B (main text).
+For the mechanism "the child's brain changes (for example, brain grows bigger, more or fewer connections between neurons)," this analysis suggested that participants rated this as a particularly important driver of development in the domains of _social connection_ and _cognition and control_. See also Figure 3, fourth row (main text).
 
-```{r s3 mech ratings lmer cog}
-s3_lmer_cog <- lmer(response ~ dev_factor_cluster + 
-                      (1 + dev_factor_cluster | ResponseId) + 
-                      (1 | dev_factor) + 
-                      (1 | capacity),
+```{r s3 mech ratings lmer brai}
+s3_lmer_brai <- lmer(response ~ factor +
+                       (1 | ResponseId) +
+                       (1 | capacity),
                 control = lmerControl(optimizer = "bobyqa"),
-                data = d3_mech_ratings %>% 
-                  filter(factor == "Cognition and control"))
+                data = d3_mech_ratings %>%
+                  filter(dev_factor == "brain_changes"))
 
-summary(s3_lmer_cog)
-# model_parameters(s3_lmer)
+summary(s3_lmer_brai)
+# model_parameters(s3_lmer_brai)
 ```
 
-```{r tabs3lmercog, include = T, message = F, warning = F}
-model_parameters(s3_lmer_cog, standardize = "refit") %>%
+```{r tabs3lmerbrai, include = T, message = F, warning = F}
+model_parameters(s3_lmer_brai, standardize = "refit") %>%
   filter(Effects == "fixed") %>%
   select(Parameter, Coefficient, SE, CI_low, CI_high, t, df_error, p) %>%
   mutate(Parameter = case_when(
     Parameter == "(Intercept)" ~ "Grand mean (GM) (intercept)",
     TRUE ~ Parameter)) %>%
-  mutate(Parameter = gsub("dev_factor_clusterext_gm", "Mechanism type (Extrinsic vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorbod_gm", "Bodily sensation (vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorsoc_gm", "Social connection (vs. GM)", Parameter)) %>%
   mutate(Parameter = gsub("factorcog_gm", "Cognition and control (vs. GM)", Parameter)) %>%
@@ -1662,188 +1629,55 @@ model_parameters(s3_lmer_cog, standardize = "refit") %>%
   select(Parameter, Coefficient, `95% CI`, everything()) %>%
   rename(df = df_error) %>%
   kable("latex", booktabs = T, longtable = T,
-        caption = "Study 3, multilevel linear model results (cognition and control): Fixed effects.",
+        caption = "Study 3, multilevel linear model results (experiences in the womb): Fixed effects.",
         digits = 2, align = c("lrrrrrr")) %>%
   kable_styling(latex_options = c("repeat_header"), font_size = 8)
 ```
 
-```{r fig03a, fig.width = 4.5, fig.asp = 1.5}
-fig03a <- d3_mech_ratings %>%
-  mutate(dev_factor_cluster = case_when(
-    is.na(dev_factor_cluster) ~ "Other",
-    dev_factor_cluster == "intrinsic" ~ "INTRINSIC mechanisms",
-    dev_factor_cluster == "extrinsic" ~ "EXTRINSIC mechanisms"),
-    dev_factor_cluster = factor(dev_factor_cluster,
-                                levels = c("INTRINSIC mechanisms", 
-                                           "EXTRINSIC mechanisms",
-                                           "Other")),
-    dev_factor_text = recode_factor(
-      dev_factor,
-      "preprogrammed" = "biologically ‘preprogrammed'",
-      "womb_experiences" = "experiences in the womb",
-      "body_grows" = "body grows and matures",
-      "brain_changes" = "brain changes",
-      "senses_improve" = "senses improve",
-      "observes_objects" = "observes objects and physical world",
-      "experiments" = "actively experiments",
-      "observes_people" = "observes people",
-      "interacts_people" = "interacts with people",
-      "people_teach" = "people explicitly teach"),
-    capacity = str_wrap(gsub("_", " ", capacity), 14)) %>%
-  ggplot(aes(x = reorder(str_wrap(dev_factor_text, 20), 
-                         as.numeric(dev_factor)), 
-             y = response, color = factor)) +
-  facet_grid(rows = vars(reorder(capacity, as.numeric(factor))),
-             cols = vars(dev_factor_cluster),
-             scales = "free", space = "free") +
-  geom_hline(yintercept = 3, lty = 2, color = "darkred") +
-  geom_jitter(alpha = 0.6, size = 0.02) +
-  geom_pointrange(data = . %>%
-                    group_by(factor, capacity, 
-                             dev_factor_cluster, 
-                             dev_factor, dev_factor_text) %>%
-                    multi_boot_standard(col = "response") %>%
-                    ungroup(),
-                  aes(y = mean, ymin = ci_lower, ymax = ci_upper),
-                  color = "black", fatten = 2) +
-  scale_color_viridis_d(end = 0.9, option = "viridis") +
-  scale_y_continuous(breaks = seq(0, 6, 3), minor_breaks = seq(0, 6, 1)) +
-  theme_minimal() +
-  theme(panel.background = element_rect(fill = NA), 
-        strip.text = element_text(vjust = 0),
-        legend.position = "top",
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-        # plot.margin = unit(c(0.5, 0.5, 0.5, 1.1), "cm")) +
-  labs(x = "Developmental mechanism",
-       y = "Response (0 = not at all important, 6 = extremely important)",
-       color = "Domain") +
-  guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
+##### Senses improve
+
+For the mechanism "the child’s senses improve (for example, vision gets sharper, hearing improves)," this analysis revealed no significant differences in importance ratings across domains. See also Figure 3, fifth row (main text).
+
+```{r s3 mech ratings lmer sens}
+s3_lmer_sens <- lmer(response ~ factor +
+                       (1 | ResponseId) +
+                       (1 | capacity),
+                control = lmerControl(optimizer = "bobyqa"),
+                data = d3_mech_ratings %>%
+                  filter(dev_factor == "senses_improve"))
+
+summary(s3_lmer_sens)
+# model_parameters(s3_lmer_brai)
 ```
 
-```{r fig03b, fig.width = 1.5, fig.asp = 6.75/1.5}
-fig03b <- d3_mech_ratings %>%
-  # filter(!is.na(dev_factor_cluster)) %>%
-  filter(!is.na(dev_factor)) %>%
-  mutate(dev_factor_cluster = case_when(
-    dev_factor == "brain_changes" ~ "brain changes",
-    dev_factor_cluster == "intrinsic" ~ "INTRINSIC",
-    dev_factor_cluster == "extrinsic" ~ "EXTRINSIC"),
-    dev_factor_cluster = factor(dev_factor_cluster,
-                                levels = c("INTRINSIC", 
-                                           "EXTRINSIC",
-                                           "brain changes"))) %>%  
-  # participant-level means for each cluster, by capacity
-  group_by(ResponseId, dev_factor_cluster, factor, capacity) %>%
-  summarise(score_a = mean(response, na.rm = T)) %>%
-  ungroup() %>%
-  # participant-level mean of means for each cluster, by domain
-  group_by(ResponseId, dev_factor_cluster, factor) %>%
-  summarise(score_b = mean(score_a, na.rm = T)) %>%
-  ungroup() %>%
-  mutate(blank_var = "  ") %>%
-  ggplot(aes(x = reorder(str_pad(dev_factor_cluster,
-                                 width = 28, side = "left"),
-                         as.numeric(dev_factor_cluster)),
-             y = score_b, color = factor)) +
-  facet_grid(cols = vars(blank_var),
-             rows = vars(reorder(toupper(factor), as.numeric(factor))),
-             scales = "free", space = "free") +
-  geom_hline(yintercept = 3, lty = 2, color = "darkred") +
-  geom_point(alpha = 0.6, size = 0.02,
-             position = position_jitter(width = 0.2,
-                                        height = 0,
-                                        seed = 94305)) +
-  geom_path(data = . %>%
-              filter(dev_factor_cluster != "brain changes"),
-            aes(group = ResponseId),
-            alpha = 0.1, size = 0.02,
-            position = position_jitter(width = 0.2,
-                                       height = 0,
-                                       seed = 94305)) +
-  # group-level mean of means of means for each cluster, by domain
-  geom_pointrange(data = . %>%
-                    group_by(factor, dev_factor_cluster) %>%
-                    multi_boot_standard(col = "score_b") %>%
-                    ungroup(),
-                  aes(y = mean, ymin = ci_lower, ymax = ci_upper),
-                  color = "black", fatten = 2) +
-  scale_color_viridis_d(end = 0.9, option = "viridis") +
-  scale_y_continuous(breaks = seq(0, 6, 3), minor_breaks = seq(0, 6, 1)) +
-  theme_minimal() +
-  theme(panel.background = element_rect(fill = NA), 
-        strip.text = element_text(vjust = 0),
-        legend.position = "top",
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-        # plot.margin = unit(c(0.5, 0.5, 0.5, 1.1), "cm")) +
-  labs(x = "Developmental mechanism type",
-       y = "Mean response (0 = not at all important, 6 = extremely important)",
-       color = "Domain") +
-  guides(color = guide_none())
-  # guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
-# fig03b
-
-# jpg version (darker)
-fig03b_jpg <- d3_mech_ratings %>%
-  # filter(!is.na(dev_factor_cluster)) %>%
-  filter(!is.na(dev_factor)) %>%
-  mutate(dev_factor_cluster = case_when(
-    dev_factor == "brain_changes" ~ "brain changes",
-    dev_factor_cluster == "intrinsic" ~ "INTRINSIC",
-    dev_factor_cluster == "extrinsic" ~ "EXTRINSIC"),
-    dev_factor_cluster = factor(dev_factor_cluster,
-                                levels = c("INTRINSIC", 
-                                           "EXTRINSIC",
-                                           "brain changes"))) %>%  
-  # participant-level means for each cluster, by capacity
-  group_by(ResponseId, dev_factor_cluster, factor, capacity) %>%
-  summarise(score_a = mean(response, na.rm = T)) %>%
-  ungroup() %>%
-  # participant-level mean of means for each cluster, by domain
-  group_by(ResponseId, dev_factor_cluster, factor) %>%
-  summarise(score_b = mean(score_a, na.rm = T)) %>%
-  ungroup() %>%
-  mutate(blank_var = "  ") %>%
-  ggplot(aes(x = reorder(str_pad(dev_factor_cluster, 
-                                 width = 28, side = "left"),
-                         as.numeric(dev_factor_cluster)), 
-             y = score_b, color = factor)) +
-  facet_grid(cols = vars(blank_var),
-             rows = vars(reorder(toupper(factor), as.numeric(factor))),
-             scales = "free", space = "free") +
-  geom_hline(yintercept = 3, lty = 2, color = "darkred") +
-  geom_point(alpha = 0.6, size = 0.02,
-             position = position_jitter(width = 0.2, 
-                                        height = 0, 
-                                        seed = 94305)) +
-  geom_path(data = . %>%
-              filter(dev_factor_cluster != "brain changes"),
-            aes(group = ResponseId), 
-            alpha = 1, size = 0.02,
-            position = position_jitter(width = 0.2, 
-                                       height = 0, 
-                                       seed = 94305)) +
-  # group-level mean of means of means for each cluster, by domain
-  geom_pointrange(data = . %>%
-                    group_by(factor, dev_factor_cluster) %>%
-                    multi_boot_standard(col = "score_b") %>%
-                    ungroup(),
-                  aes(y = mean, ymin = ci_lower, ymax = ci_upper),
-                  color = "black", fatten = 2) +
-  scale_color_viridis_d(end = 0.9, option = "viridis") +
-  scale_y_continuous(breaks = seq(0, 6, 3), minor_breaks = seq(0, 6, 1)) +
-  theme_minimal() +
-  theme(panel.background = element_rect(fill = NA), 
-        strip.text = element_text(vjust = 0),
-        legend.position = "top",
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-        # plot.margin = unit(c(0.5, 0.5, 0.5, 1.1), "cm")) +
-  labs(x = "Developmental mechanism type",
-       y = "Mean response (0 = not at all important, 6 = extremely important)",
-       color = "Domain") +
-  guides(color = guide_none())
-  # guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
-# fig03b_jpg
+```{r tabs3lmersens, include = T, message = F, warning = F}
+model_parameters(s3_lmer_sens, standardize = "refit") %>%
+  filter(Effects == "fixed") %>%
+  select(Parameter, Coefficient, SE, CI_low, CI_high, t, df_error, p) %>%
+  mutate(Parameter = case_when(
+    Parameter == "(Intercept)" ~ "Grand mean (GM) (intercept)",
+    TRUE ~ Parameter)) %>%
+  mutate(Parameter = gsub("factorbod_gm", "Bodily sensation (vs. GM)", Parameter)) %>%
+  mutate(Parameter = gsub("factorsoc_gm", "Social connection (vs. GM)", Parameter)) %>%
+  mutate(Parameter = gsub("factorcog_gm", "Cognition and control (vs. GM)", Parameter)) %>%
+  mutate(Parameter = gsub("\\:", " x ", Parameter)) %>%
+  mutate(p = ifelse(p < 0.001, "<0.001", round_x(p, 3))) %>%
+  mutate(`95% CI` = paste0("[", round_x(CI_low), ", ", round_x(CI_high), "]")) %>%
+  select(-starts_with("CI")) %>%
+  select(Parameter, Coefficient, `95% CI`, everything()) %>%
+  rename(df = df_error) %>%
+  kable("latex", booktabs = T, longtable = T,
+        caption = "Study 3, multilevel linear model results (experiences in the womb): Fixed effects.",
+        digits = 2, align = c("lrrrrrr")) %>%
+  kable_styling(latex_options = c("repeat_header"), font_size = 8)
 ```
+
+XXXX BOOKMARK
+
+
+
+
+
 
 ### Developmental mechanisms: Selection of "most important"
 
