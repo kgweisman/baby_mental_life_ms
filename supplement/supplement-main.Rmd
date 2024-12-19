@@ -1085,12 +1085,12 @@ fig02a_gam_jpg <- d2_gam_r1_pred %>%
        caption = bquote(paste("Adjusted R"^"2"*" = ", .(d2_gam_r1_rsq)))) +
   guides(color = guide_none())
 
-# save plot
-if (resave_plots == T | !file.exists("../outputs/fig02a_gam.pdf")) {
-  ggsave("../outputs/fig02a_gam.svg")
-  ggsave("../outputs/fig02a_gam.pdf")
-  ggsave("../outputs/fig02a_gam.jpg")
-}
+# # save plot
+# if (resave_plots == T | !file.exists("../outputs/fig02a_gam.pdf")) {
+#   ggsave("../outputs/fig02a_gam.svg")
+#   ggsave("../outputs/fig02a_gam.pdf")
+#   ggsave("../outputs/fig02a_gam.jpg")
+# }
 ```
 
 ```{r s2 export results}
@@ -1346,11 +1346,11 @@ fig02b_gam_jpg <- d3_gam_r1_pred %>%
        caption = bquote(paste("Adjusted R"^"2"*" = ", .(d3_gam_r1_rsq)))) +
   guides(color = guide_none())
 
-# save plot
-if (resave_plots == T | !file.exists("../outputs/fig02b_gam.pdf")) {
-  ggsave("../outputs/fig02b_gam.svg")
-  ggsave("../outputs/fig02b_gam.pdf")
-}
+# # save plot
+# if (resave_plots == T | !file.exists("../outputs/fig02b_gam.pdf")) {
+#   ggsave("../outputs/fig02b_gam.svg")
+#   ggsave("../outputs/fig02b_gam.pdf")
+# }
 ```
 
 #### Figure 2
@@ -2173,9 +2173,117 @@ saveRDS(s3_results, "../outputs/s3_results.rds")
 ```
 
 
+# Study comparison: Capacity attributions to newborns, 9-months, and 5-year-olds
+
+As described in the main text, all of the current studied employed a fixed-order design, in which all participants assessed target ages in a fixed order beginning with the youngest target age (newborns) and proceeding chronologically until the oldest target age (5-year-olds). This decision reflects the fact that our priority in these studies was to assess beliefs about the developmental trajectories of capacities, rather than beliefs about capacities at a specific point in development. However, one limitation of this fixed-order design is that it makes it difficult to assess the stability of participants’ assessments of the fine-grained differences between specific points in development. 
+
+To provide some sense of the stability and reliability of US adults' representations of specific target ages across studies, Supplementary Figure \@ref(fig:figS06) presents a comparison of capacity ratings and summary scores by domain at the three target ages that were included in all of the current studies (newborns, 9-month-olds, and 5-year-olds). As a reminder, in Study 1, participants assessed 60 capacities (including but not limited to the 20 capacities depicted in Panel A), at each of the 3 target ages depicted here. In Study 2, participants assessed the 20 capacities depicted in Panel A, at 13 target ages (including but not limited to the 3 target ages depicted here). In Study 3, participants assessed 8 capacities (a subset of the 20 capacities depicted in Panel A), at 13 target ages (including but not limited to the 3 target ages depicted here).
+
+```{r}
+d123_gam <- full_join(
+  d1_gam %>% 
+    mutate(study = "Study 1"),
+  d2_gam %>% 
+    mutate(study = "Study 2") %>%
+    mutate(response = response*100)) %>%
+  left_join(
+    d3_gam %>% 
+      distinct(target, target_ord)) %>%
+  full_join(
+    d3_gam %>% 
+      mutate(study = "Study 3") %>%
+      mutate(response = response*100))
+```
+
+```{r figS06 code, fig.width = 10, fig.asp = 1.2}
+figS06 <- d123_gam %>%
+  filter(target_ord %in% c("newborns", "9-month-olds", "5-year-olds")) %>%
+  filter(capacity %in%
+           c(full_join(d2_gam %>% distinct(capacity),
+                       d3_gam %>% distinct(capacity)) %>%
+               distinct(capacity) %>%
+               pull(capacity) %>%
+               as.character())) %>%
+  complete(
+    capacity, nesting(study, target, target_year, target_num, target_ord),
+    fill = list(response = -1)) %>% # introduce -1 to align studies across panels
+  select(-factor) %>%
+  left_join(d2_gam %>% distinct(capacity, factor)) %>%
+  left_join(d2_scales %>% select(-loading)) %>%
+  mutate(capacity_text = str_wrap(gsub("_", " ", capacity), 40)) %>%
+  ggplot(aes(x = target_ord, y = response, 
+             color = factor)) +
+  facet_wrap(facets = vars(reorder(capacity_text, as.numeric(order))), nrow = 4) +
+  geom_point(
+    aes(group = study),
+    size = 0.02,
+    alpha = 0.6,
+    position = position_jitterdodge(
+      dodge.width = 0.8,
+      jitter.width = 0.6,
+      jitter.height = 0)) +
+  scale_color_viridis_d(end = 0.9, option = "viridis") +
+  geom_path(
+    data = . %>%
+      group_by(study, target, target_year, target_num, target_ord, 
+               factor, capacity, capacity_text, order) %>%
+      summarise(mean = mean(response, na.rm = T)) %>%
+      ungroup(),
+    aes(y = mean, group = study),
+    color = "black", lty = 2, 
+    position = position_dodge(width = 0.8)) +
+  geom_pointrange(
+    data = . %>%
+      group_by(study, target, target_year, target_num, target_ord, 
+               factor, capacity, capacity_text, order) %>%
+      multi_boot_standard(col = "response") %>%
+      ungroup(),
+    aes(y = mean, ymin = ci_lower, ymax = ci_upper, 
+        group = study, fill = study),
+    color = "black", shape = 21, fatten = 6,
+    position = position_dodge(width = 0.8)) +
+  geom_text(
+    data = . %>%
+      group_by(study, target, target_year, target_num, target_ord, 
+               factor, capacity, capacity_text, order) %>%
+      summarise(mean = mean(response, na.rm = T)) %>%
+      ungroup(),
+    aes(y = mean, group = study, label = gsub("Study ", "", study)),
+    color = "white", size = 2.5, fontface = "bold", hjust = 0.5, vjust = 0.5,
+    position = position_dodge(width = 0.8)) +
+  scale_fill_manual(values = c("#9801a3", "#a3012f", "#a36501")) +
+  scale_y_continuous(
+    limits = c(-0.05, NA), # exclude the specious "-1" responses introduced above
+    breaks = seq(0, 100, 25),
+    labels = seq(0, 100, 25)) +
+  scale_x_discrete(labels = c("newborns", "9 months", "5 years")) +
+  theme_minimal() +
+  theme(panel.background = element_rect(fill = NA), 
+        strip.text = element_text(vjust = 0),
+        legend.position = "top") +
+        # axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+        # plot.margin = unit(c(0.5, 0.5, 0.5, 1.1), "cm")) +
+  labs(x = "Target age",
+       y = "Mean response\n0 = not at all capable, 100 = completely capable",
+       color = "Domain:",
+       fill = "Study:") +
+  guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
+figS06
+
+if (resave_plots == T | !file.exists("../outputs/figS06.pdf")) {
+  ggsave("../outputs/figS06.svg")
+  ggsave("../outputs/figS06.pdf")
+}
+```
+
+```{r figS06, fig.cap="Comparison of capacity ratings across studies (Studies 1-3). This visualization includes responses for each of the capacities and target ages held in common across at least two of our three studies. Lighter colorful represent individual participants’ responses or scores, larger points correspond to mean responses or scores across the sample, and error bars are bootstrapped 95% confidence intervals.", include = T}
+knitr::include_graphics("../outputs/figS06.pdf")
+```
+
+
 # Selection of capacities: Comparison to previous studies
 
-Supplementary Table \@ref(tab:tabs1efaparload) provides an item-by-item comparison of the capacities included in this study to capacities included in previous studies of mind perception [@gray.etal2007; @weisman.etal2017a; @weisman.etal2017b; @malle2019].
+Supplementary Table \@ref(tab:tabcapcomp) provides an item-by-item comparison of the capacities used here to those used in previous studies of mind perception [@gray.etal2007; @weisman.etal2017a; @weisman.etal2017b; @malle2019].
 
 ```{r capacities comparison df}
 d_cap_comp <- read_csv("../data/capacities_comparison.csv") %>%
@@ -2211,8 +2319,9 @@ d_cap_comp <- read_csv("../data/capacities_comparison.csv") %>%
   ungroup()
 ```
 
-```{r tabcapcomp, include = T, warning = F, message = F}
-d_cap_comp %>%
+```{r tabcapcomp, results = "asis", include = T, warning = F, message = F}
+cat("\\begin{landscape}")
+tabcapcomp <- d_cap_comp %>%
   select(-Domain) %>%
   mutate_all(~gsub("similar to .", "similar to \\`", .)) %>% 
   mutate(`Study 1` = case_when(
@@ -2224,12 +2333,13 @@ d_cap_comp %>%
   select(-`Study 2`, -`Study 3`) %>%
   mutate(across(c(`Gray et al. (2007)`),
                 ~gsub("\\..*", "", .))) %>%
-  kable("latex", booktabs = T, escape = F, longtable = T) %>%
+  kable("latex", booktabs = T, escape = F, longtable = T,
+        caption = "Item-by-item comparison of the capacities included in the current studies to capacities included in previous studies of mind perception.") %>%
   kable_styling(latex_options = c("repeat_header"), font_size = 8) %>%
   add_header_above(c("Current studies" = 1,
                      "Previous studies" = 5)) %>%
-  column_spec(1, width = "4cm") %>%
-  column_spec(2:6, width = "2cm") %>%
+  # column_spec(1, width = "4cm") %>%
+  column_spec(2:6, width = "2.7cm") %>%
   pack_rows(group_label= "Bodily sensation", start_row = 1, end_row = 11) %>%
   pack_rows("Negative affect", 12, 16) %>%
   pack_rows("Social connection", 17, 38) %>%
@@ -2238,6 +2348,8 @@ d_cap_comp %>%
   footnote(symbol = c("Also used in Study 2; ", "Also used in Study 3"),
            symbol_title = "Notes: ",
            footnote_as_chunk = T)
+tabcapcomp
+cat("\\end{landscape}")
 ```
 
 
