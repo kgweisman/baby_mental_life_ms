@@ -10,9 +10,9 @@ package_list <- c(
   "mgcv",
   "kableExtra",
   "parameters",
-  "ggdendro",
-  "dendextend",
   "cowplot",
+  "rsq",
+  "ggnewscale",
   "bookdown"
 )
 
