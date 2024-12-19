@@ -7,7 +7,7 @@ round_x <- function(n, x = 2) { format(round(n, x), nsmall = x) }
 heatmap_fun <- function(efa, factor_names = NA){
   
   # get factor names
-  if(is.na(factor_names)){
+  if(anyNA(factor_names)){
     factor_names <- paste("Factor", 1:efa$factors)
   }
   

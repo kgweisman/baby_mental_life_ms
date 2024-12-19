@@ -376,10 +376,10 @@ d3_dev_factor_rating <- d3 %>%
                                         "brain_changes",
                                         "senses_improve", 
                                         "observes_objects",
-                                        "experiments",
                                         "observes_people",
                                         "interacts_people",
-                                        "people_teach"))) %>%
+                                        "people_teach",
+                                        "experiments"))) %>%
   mutate(ResponseId = as.character(ResponseId))
 
 # dev_factor "most important" for ALL TARGETS, ALL CAPACITIES
@@ -400,9 +400,9 @@ d3_dev_factor_most_important <- d3 %>%
                                         "senses_improve", 
                                         "observes_objects",
                                         "observes_people",
-                                        "experiments",
                                         "interacts_people",
-                                        "people_teach")))
+                                        "people_teach",
+                                        "experiments")))
 
 d3_dev_factor_most_important_choice <- d3_dev_factor_most_important %>%
   filter(!is.na(response), response != "", !grepl("free", question)) %>%
