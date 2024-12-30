@@ -1,10 +1,13 @@
 ---
-title: "Beliefs about the development of mental life"
-subtitle: "Supplemental Materials"
-author: "[authors removed for anonymous review]"
-date: "2024-12-17"
+# title: "Beliefs about the development of mental life"
+# subtitle: "Supplemental Materials"
+# author: "Kara Weisman, Lucy S. King, and Kathryn Humphreys"
+# date: "2024-12-30"
 output:
   bookdown::pdf_document2:
+    includes:
+      in_header: header.tex
+      before_body: cover.tex
     latex_engine: xelatex
     fig_caption: yes
     toc: true
@@ -19,6 +22,7 @@ figsintext: yes
 header-includes: 
    - \usepackage{lineno}
    - \linenumbers
+   - \modulolinenumbers[5]
    - \usepackage{float}
    - \usepackage{pdflscape}
 tables: yes
@@ -69,7 +73,7 @@ In a series of large-scale studies we assessed how US adults conceptualize the d
 
 In these Supplemental Materials, we provide extended information about the methods and results presented in the main paper, present additional results, and provide an item-by-item comparison of the capacity items used here to items used in previous work on mind perception [@gray.etal2007; @weisman.etal2017a; @weisman.etal2017b; @malle2019].
 
-Note: This is a fully reproducible manuscript, written in RMarkdown using the "knitr" package for R [@xie2021]. The full, editable script for all analyses, figures, and tables (here and in the main text) is available in the .Rmd file that generated this document, which can be found in the following GitHub repository (anonymized for peer review): https://anonymous.4open.science/r/baby_mental_life_ms-C261.
+Note: This is a fully reproducible manuscript, written in RMarkdown using the "knitr" package for R [@xie2021]. The full, editable script for all analyses, figures, and tables (here and in the main text) is available in the .Rmd file that generated this document, which can be found in the following GitHub repository: https://github.com/kgweisman/baby_mental_life_ms.
 
 
 # Extended methods
@@ -85,11 +89,11 @@ s3_results <- readRDS("../outputs/s3_results.rds")
 # ALSO NOTE: if you encounter problems knitting, try clearing the knit cache.
 ```
 
-Methods, inclusion/exclusion criteria, and analyses marked as "preregistered" were preregistered on the Open Science Framework (OSF) website: (anonymized links for peer review: Study 1: https://osf.io/e6ajh/?view_only=f2539dbce3664172907aa7a381f62d34; Study 2: https://osf.io/j72dg/?view_only=7e4c01fec32f40a3b13c0ebc2b7ced18; Study 3: https://osf.io/xh8ce/?view_only=56649aff37aa4f1db2dc06b2e69576f4). 
+Methods, inclusion/exclusion criteria, and analyses marked as "preregistered" were preregistered on the Open Science Framework (OSF) website (Study 1: https://osf.io/e6ajh; Study 2: https://osf.io/j72dg; Study 3: https://osf.io/xh8ce). 
 
-All materials used in these studies are available in the following OSF repository (anonymized link: https://osf.io/xrznd/?view_only=d9eb55e46028453cbd90534a003d3f52 (DOI: 10.17605/OSF.IO/XRZND).
+All materials used in these studies are available in the following OSF repository: https://osf.io/xrznd/ (DOI: 10.17605/OSF.IO/XRZND).
 
-All studies were approved by [IRB information removed to preserve anonymity]. 
+All studies were approved by the Institution Review Board for Human Subjects at Stanford University. 
 
 
 ## Study 1
@@ -436,7 +440,7 @@ tabs1efawdmload <- parameters(s1_efa_wdm, sort = T) %>%
 tabs1efawdmload %>%
   select(-ends_with("_bold")) %>%
   kable("latex", booktabs = T, escape = F, longtable = T, digits = 2,
-        caption = "\\text{Study 1, factor solution suggested by Weisman et al.'s (2017) factor retention criteria: Factor loadings, complexity, and uniqueness.}") %>%
+        caption = "\\text{Study 1, factor solution suggested by Weisman et al.'s (2017) factor retention criteria.}") %>%
   kable_styling(latex_options = c("repeat_header"), font_size = 8) %>%
   column_spec(2, bold = tabs1efawdmload[,s1_weismanetal+4]) %>%
   column_spec(3, bold = tabs1efawdmload[,s1_weismanetal+5]) %>%

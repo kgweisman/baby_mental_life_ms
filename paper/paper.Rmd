@@ -1,16 +1,27 @@
 ---
-title: "Beliefs about the development of mental life"
-author: '[authors removed for anonymous review]'
+# title: "Beliefs about the development of mental life"
+# author: 
+#   - "Kara Weisman\\newline University of California, Riverside\\newline ORCID: https://orcid.org/0000-0002-3706-7554"
+#   - "Lucy S. King\\newline Vanderbilt University\\newline ORCID: http://orcid.org/0000-0002-2552-0614"
+#   - "Kathryn Humphreys\\newline Vanderbilt University\\newline ORCID: https://orcid.org/0000-0002-5715-6597"
+# output:
+#   pdf_document:  default
+#   # word_document:
+#     # reference_docx: word-styles-ref.docx
 output:
-  pdf_document:  default
-  # word_document:
-    # reference_docx: word-styles-ref.docx
+  bookdown::pdf_document2:
+    includes:
+      in_header: header.tex
+      before_body: cover.tex
+    toc: false
+    number_sections: false
 bibliography: ../supplement/references.bib
 csl: ../supplement/apa.csl
 figsintext: yes
 header-includes:
 - \usepackage{lineno}
 - \linenumbers
+- \modulolinenumbers[5]
 - \usepackage{float}
 ---
 
@@ -56,7 +67,7 @@ However, the burgeoning field of mind perception has largely neglected the quest
 
 Yet infants and young children are far from unusual social partners. Caregiving relationships are at the core of human existence; for many people, infants and young children are among the most frequent and highly valued minds that we encounter. In the current studies we set out to shed new light on this important and understudied aspect of mind perception: how laypeople reason about the development of human mental life. In three studies, we assessed US adults' folk beliefs about children's developing abilities for physiological sensation, perception, cognition, emotion, self-regulation, social interaction, and other aspects of "mental life," broadly construed. We focused on development between birth and age five years—a time of particularly dramatic maturation in perceptual acuity, emotional experience, cognitive ability, executive function, social engagement, and many other domains.
 
-Methods, inclusion/exclusion criteria, and analyses marked as "preregistered" were preregistered on the Open Science Framework (OSF) website: (anonymized links for peer review: Study 1: https://osf.io/e6ajh/?view_only=f2539dbce3664172907aa7a381f62d34; Study 2: https://osf.io/j72dg/?view_only=7e4c01fec32f40a3b13c0ebc2b7ced18; Study 3: https://osf.io/xh8ce/?view_only=56649aff37aa4f1db2dc06b2e69576f4). All studies were approved by [IRB information removed to preserve anonymity]. For extended descriptions of methods and results, see Supplemental Materials.
+Methods, inclusion/exclusion criteria, and analyses marked as "preregistered" were preregistered on the Open Science Framework (OSF) website (Study 1: https://osf.io/e6ajh; Study 2: https://osf.io/j72dg; Study 3: https://osf.io/xh8ce). All studies were approved by the Institution Review Board for Human Subjects at Stanford University. For extended descriptions of methods and results, see Supplemental Materials.
 
 
 # Study 1
@@ -75,7 +86,7 @@ We designed Study 1 to explore the correlational structure of participants' resp
 
 ### Materials and procedure
 
-Participants completed three trials in which they assessed the mental lives of children at three target ages: birth, 9 months, and 5 years. On each trial, they were shown two representative photographs of children at the target age (labeled "newborns," "9-month-olds," or "5-year-olds"), and asked to answer the following question for 60 capacities: "To what extent is a [newborn/9-month-old/5-year-old] capable of [this capacity]?" See Supplemental Materials for details about the selection of these photographs. These photographs (and all materials used in these studies) are available in the following OSF repository (anonymized link: https://osf.io/xrznd/?view_only=d9eb55e46028453cbd90534a003d3f52; DOI: 10.17605/OSF.IO/XRZND). Participants responded on a sliding scale from 0 (labeled "not at all capable") to 100 ("completely capable").
+Participants completed three trials in which they assessed the mental lives of children at three target ages: birth, 9 months, and 5 years. On each trial, they were shown two representative photographs of children at the target age (labeled "newborns," "9-month-olds," or "5-year-olds"), and asked to answer the following question for 60 capacities: "To what extent is a [newborn/9-month-old/5-year-old] capable of [this capacity]?" See Supplemental Materials for details about the selection of these photographs. These photographs (and all materials used in these studies) are available in the following OSF repository: https://osf.io/xrznd/ (DOI: 10.17605/OSF.IO/XRZND). Participants responded on a sliding scale from 0 (labeled "not at all capable") to 100 ("completely capable").
 
 The 60 capacities included in Study 1 were drawn from several areas of previous research. Our goals in selecting items were to: (1) balance the representation of the conceptual organization underlying mental capacity attributions in general, as identified in previous work [@gray.etal2007; @weisman.etal2017a; @weisman.etal2017b; @weisman.etal2018; @malle2019]; (2) add items relevant to early development, as identified by existing measures of temperament and behavior in early life [@putnam.etal2006; @rothbart1978]; and (3) assess the broadest range of mental capacities within financial and participant burden constraints, as identified by extensive discussions among the authors drawing on our own research and clinical experience with infants and young children. This process yielded a list of 60 capacities; see Figure 1, and see Supplemental Materials for an item-by-item comparison of the capacities used here to those used in previous studies of mind perception. Capacities were presented in a random order.
 

@@ -1,0 +1,33 @@
+% Set up APA style margins
+\usepackage[margin=1in]{geometry}
+
+% % Set font to Times New Roman (APA recommended font)
+% \usepackage{times}
+
+% % Double spacing
+% \usepackage{setspace}
+% \doublespacing
+
+% Page headers
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{} % Clear all header and footer fields
+\fancyhead[L]{\textit{BELIEFS ABOUT THE DEVELOPMENT OF MENTAL LIFE (S.M.)}} % Running head (left-aligned)
+\fancyhead[R]{\thepage} % Page number (right-aligned)
+
+% Remove header from the first page (title page)
+\fancypagestyle{plain}{
+  \fancyhf{} % Clear header/footer
+  \fancyhead[R]{\thepage} % Page number only
+}
+
+% Set paragraph indentation (0.5 inch, APA requirement)
+\setlength{\parindent}{0.5in}
+
+% Disable hyphenation for APA-style consistency
+\usepackage[none]{hyphenat}
+
+% Add title case to section headings (optional, if using headings)
+\usepackage{titlesec}
+\titleformat{\section}
+  {\normalfont\large\bfseries}{\thesection}{1em}{}
