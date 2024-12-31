@@ -93,7 +93,7 @@ Methods, inclusion/exclusion criteria, and analyses marked as "preregistered" we
 
 All materials used in these studies are available in the following OSF repository: https://osf.io/xrznd/ (DOI: 10.17605/OSF.IO/XRZND).
 
-All studies were approved by the Institution Review Board for Human Subjects at Stanford University. 
+All studies were approved by the Research Compliance Office, Human Subjects Panel (IRB) at Stanford University. 
 
 
 ## Study 1
