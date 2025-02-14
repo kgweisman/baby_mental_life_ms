@@ -42,6 +42,12 @@ _**Figure 2**: Perceived developmental trajectories for four domains of mental l
 
 _**Figure 3**: Figure 3: Perceived importance of various mechanisms in the development of four domains of mental life among US adults (Study 3); see main text for the full text of each mechanism. Small, lighter points represent individual participants’ ratings of how important each developmental mechanism is in the development of each capacity within a domain (top row: bodily sensation; second row: negative affect; third row: social connection; bottom row: cognition and control). Larger black and red points correspond to mean importance ratings across the sample, and error bars are bootstrapped 95% confidence intervals. On the right side of each panel are the percentages of participants who selected each developmental mechanism as the ‘most important’ driver of development for that capacity, with modal selections (including items within 10% of the mode) in red._
 
+#### Figure 4
+
+![Figure 4](https://github.com/kgweisman/baby_mental_life_ms/blob/master/outputs/fig04.jpg?raw=TRUE)
+
+_**Figure 4**: Figure 4: Network graph summarizing the importance of each developmental mechanism (along the bottom) for each capacity (along the top) among US adults (Study 3). Capacities are sorted and color-coded by domain (see Figures 2-3); developmental mechanisms are arranged in the fixed order of presentation (roughly, from what we perceived to be the most innate or biological mechanisms of development, to what we perceived to be the most learned or social). See main text for the full text of each mechanism._
+
 ## Programming environment
 
 All analyses were conducted in R (version 4.3.3); platform: aarch64-apple-darwin20 (64-bit); running under: macOS Sonoma 14.5.
@@ -59,3 +65,7 @@ The analyses were built using the following packages:
 - knitr (version 1.43)
 - rsq (version 2.5)
 - ggnewscale (version 0.4.8)
+- GGally (version 2.2.1)
+- ggrepel (version 0.9.5)
+- igraph (version 2.1.2)
+- ggraph (version 2.2.1)
