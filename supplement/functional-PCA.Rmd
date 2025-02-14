@@ -1,0 +1,316 @@
+---
+title: 'Baby mental life: fPCA'
+author: "Kara Weisman"
+date: "2025-02-03"
+output: html_document
+---
+
+```{r setup, set.seed(94305), include = F}
+knitr::opts_chunk$set(cache = T)
+knitr::opts_chunk$set(echo = F)
+knitr::opts_chunk$set(fig.pos = 'H')
+knitr::opts_chunk$set(include = F)
+```
+
+```{r load packages}
+library(ggdendro)
+library(dendextend)
+library(psych)
+library(lme4)
+library(mgcv)
+library(kableExtra)
+library(langcog)
+library(parameters)
+library(cowplot)
+library(fda)
+library(tidyverse)
+library(rsq)
+library(ggnewscale)
+```
+
+```{r load custom funs}
+source("../code/custom_funs.R")
+```
+
+```{r load data}
+# suppress warnings and messages because dplyr is verbose
+suppressWarnings(suppressMessages(source("../code/data_prep_s1.R", chdir = TRUE)))
+suppressWarnings(suppressMessages(source("../code/data_prep_s2.R", chdir = TRUE)))
+suppressWarnings(suppressMessages(source("../code/data_prep_s3.R", chdir = TRUE)))
+```
+
+
+\newpage
+In a series of large-scale studies we assessed how US adults conceptualize the development of the human mind over the first five years of life. We identified four core capacities that are perceived by US adults to develop over human infancy and early childhood, _bodily sensation_, _negative affect_, _social connection_, and _cognition and control_ (Study 1); charted how these different aspects of mental life are perceived to change over the first five years of a child's life (Studies 2-3); and explored the intuitive theories that underlie the observed differences in the perceived developmental trajectories of these four aspects of mental life (Study 3). 
+
+In this RMarkdown file, we apply a "functional PCA" approach to analyzing the data from Study 2.
+
+
+```{r load custom funs}
+source("../code/custom_funs.R")
+```
+
+```{r load data}
+# suppress warnings and messages because dplyr is verbose
+# suppressWarnings(suppressMessages(source("../code/data_prep_s1.R", chdir = TRUE)))
+suppressWarnings(suppressMessages(source("../code/data_prep_s2.R", chdir = TRUE)))
+# suppressWarnings(suppressMessages(source("../code/data_prep_s3.R", chdir = TRUE)))
+```
+
+```{r}
+d2_scales <- data.frame(
+  capacity = colnames(d2_all)) %>%
+  mutate(
+    factor = case_when(
+      capacity %in% c(
+        "getting_hungry", "feeling_pain", "feeling_tired", "hearing_sounds",
+        "feeling_physically_uncomfortable") ~ "Bodily sensation",
+      capacity %in% c(
+        "feeling_overwhelmed", "feeling_distressed", "feeling_frustrated",
+        "feeling_helpless", "feeling_lonely") ~ "Negative affect",
+      capacity %in% c(
+        "feeling_happy", "finding_something_funny", "feeling_excited",
+        "loving_somebody", "learning_from_other_people") ~ "Social connection",
+      capacity %in% c(
+        "having_self_control", "controlling_their_emotions", "telling_right_from_wrong",
+        "planning", "reasoning_about_things") ~ "Cognition and control")) %>%
+  mutate(factor = factor(
+    factor, 
+    levels = c(
+      "Bodily sensation", "Negative affect", 
+      "Social connection", "Cognition and control"))) %>%
+  arrange(factor) %>%
+  mutate(loading = NA,
+         order = 1:nrow(.))
+```
+
+```{r}
+d2_cap_ratings <- d2_all %>%
+  rownames_to_column("ResponseId_target") %>%
+  separate(ResponseId_target, c("ResponseId", "target")) %>%
+  mutate(target_year = recode(
+    target,
+    target00mo = 0, # newborns
+    target0Xmo = 4/365, # 4 days
+    target01mo = 1/12, # 1 month
+    target02mo = 2/12, 
+    target04mo = 4/12, 
+    target06mo = 6/12, 
+    target09mo = 9/12,
+    target12mo = 12/12,
+    target18mo = 18/12,
+    target24mo = 24/12,
+    target36mo = 36/12,
+    target48mo = 48/12,
+    target60mo = 60/12)) %>%
+  gather(capacity, response, -ResponseId, -starts_with("target")) %>%
+  left_join(d2_scales %>% distinct(factor, capacity))
+```
+
+### Functional PCA
+
+```{r functional_pca_study2_multivariate, echo=TRUE, message=FALSE, warning=FALSE}
+# # Step 1: Reshape the data to wide format (each Capacity × Target Age as a column)
+# d2_ratings_matrix <- d2_cap_ratings %>%
+#   dplyr::select(-c(target, factor)) %>%
+#   unite("capacity_age", capacity, target_year, sep = "_") %>%
+#   pivot_wider(names_from = capacity_age, values_from = response) %>%
+#   column_to_rownames("ResponseId") %>%
+#   as.matrix()
+
+# Step 1: Define the target ages based on 'target_year'
+ages <- sort(unique(d2_cap_ratings$target_year))  # Numeric ages in years
+
+# Step 2: Create a B-spline basis for smoothing
+basis <- create.bspline.basis(rangeval = range(ages), nbasis = 4)  # Adjust nbasis if needed
+
+# Step 3: Get the list of unique capacities
+capacities <- unique(d2_cap_ratings$capacity)
+
+# Step 4: Smooth the data for each capacity separately
+smoothed_list <- lapply(capacities, function(cap) {
+  # Subset data for the current capacity and reshape to wide format
+  ratings_submatrix <- d2_cap_ratings %>%
+    filter(capacity == cap) %>%
+    dplyr::select(-factor, -target, -capacity) %>%
+    pivot_wider(names_from = target_year, values_from = response) %>%
+    column_to_rownames("ResponseId") %>%
+    as.matrix()
+  
+  # Apply smoothing
+  smooth.basis(argvals = ages, y = t(ratings_submatrix), fdParobj = basis)$fd
+})
+
+# # Step 5: Combine smoothed data for multivariate functional PCA
+# smoothed_data_combined <- do.call(cbind, smoothed_list)
+
+# # Combine smoothed data into a multivariate functional data object
+# # Stack the functional data using fd utilities
+# fd_list_combined <- do.call(fd, lapply(smoothed_list, function(x) x$coefs))
+
+# Step 1: Extract coefficients from each smoothed fd object
+coef_matrix <- do.call(cbind, lapply(smoothed_list, function(fd_obj) fd_obj$coefs))
+
+# Step 2: Use the same basis as before to create a new multivariate functional data object
+combined_fd <- fd(coef_matrix, basis)
+
+# Step 3: Perform functional PCA
+fpca_result <- pca.fd(combined_fd, nharm = 4)  # Extract first 4 principal components
+
+# Step 4: Visualize the principal components
+plot(fpca_result$harmonics, main = "Multivariate Functional PCA (Study 2)")
+
+# Step 5: Display variance explained by each principal component
+fpca_result$varprop
+```
+
+```{r}
+scores <- fpca_result$scores
+
+plot(scores[,1], scores[,2], 
+     xlab = "PC1 Scores", ylab = "PC2 Scores",
+     main = "Participant Scores on PC1 vs PC2",
+     pch = 19, col = "darkorange")
+abline(h = 0, v = 0, lty = 2)
+```
+
+```{r}
+# Compare PC1 loadings across capacities
+plot(fpca_result$harmonics[1], col = "blue", lwd = 2, main = "PC1 Across Capacities")
+plot(fpca_result$harmonics[2], col = "red", lwd = 2, main = "PC2 Across Capacities")
+plot(fpca_result$harmonics[3], col = "green", lwd = 2, main = "PC3 Across Capacities")
+plot(fpca_result$harmonics[4], col = "purple", lwd = 2, main = "PC4 Across Capacities")
+```
+
+```{r}
+# Merge participant scores with the original data
+participant_scores <- data.frame(
+  ResponseId = unique(d2_cap_ratings$ResponseId),
+  PC1_Score = fpca_result$scores[,1],
+  PC2_Score = fpca_result$scores[,2],
+  PC3_Score = fpca_result$scores[,3],
+  PC4_Score = fpca_result$scores[,4])
+
+# Merge with capacity data
+merged_data <- d2_cap_ratings %>%
+  left_join(participant_scores, by = "ResponseId")
+```
+
+
+```{r, fig.width = 10}
+# Plot how PC1 scores relate to specific capacities (example with 'reasoning_about_things')
+merged_data %>%
+  mutate(score_cat = case_when(
+    PC1_Score < 0 ~ "low",
+    PC1_Score >= 0 ~ "high")) %>%
+  mutate(capacity = str_wrap(gsub("_", " ", capacity), 20)) %>%
+  ggplot(aes(x = target_year, y = response, color = score_cat)) +
+  facet_wrap(facets = vars(reorder(capacity, as.numeric(factor)))) +
+  geom_smooth() +
+  # geom_jitter(height = 0, width = 0.2, alpha = 0.05, size = 0.1) +
+  # scale_color_gradient(low = "red", high = "blue") +
+  theme_minimal() +
+  labs(title = "PC1 Scores vs. Reasoning Ratings Across Ages",
+       color = "PC1 score (cutoff: 0)",
+       x = "Target Age (years)", y = "Rating")
+```
+
+```{r, fig.width = 10}
+# Plot how PC2 scores relate to specific capacities (example with 'reasoning_about_things')
+merged_data %>%
+  mutate(score_cat = case_when(
+    PC2_Score < 0 ~ "low",
+    PC2_Score >= 0 ~ "high")) %>% 
+  mutate(capacity = str_wrap(gsub("_", " ", capacity), 20)) %>%
+  ggplot(aes(x = target_year, y = response, color = score_cat)) +
+  facet_wrap(facets = vars(reorder(capacity, as.numeric(factor)))) +
+  geom_smooth() +
+  # geom_jitter(height = 0, width = 0.2, alpha = 0.05, size = 0.1) +
+  # scale_color_gradient(low = "red", high = "blue") +
+  theme_minimal() +
+  labs(title = "PC2 Scores vs. Reasoning Ratings Across Ages",
+       color = "PC2 score (cutoff: 0)",
+       x = "Target Age (years)", y = "Rating")
+```
+
+```{r, fig.width = 10}
+# Plot how PC3 scores relate to specific capacities (example with 'reasoning_about_things')
+merged_data %>%
+  mutate(score_cat = case_when(
+    PC3_Score < 0 ~ "low",
+    PC3_Score >= 0 ~ "high")) %>% 
+  mutate(capacity = str_wrap(gsub("_", " ", capacity), 20)) %>%
+  ggplot(aes(x = target_year, y = response, color = score_cat)) +
+  facet_wrap(facets = vars(reorder(capacity, as.numeric(factor)))) +
+  geom_smooth() +
+  # geom_jitter(height = 0, width = 0.2, alpha = 0.05, size = 0.1) +
+  # scale_color_gradient(low = "red", high = "blue") +
+  theme_minimal() +
+  labs(title = "PC3 Scores vs. Reasoning Ratings Across Ages",
+       color = "PC3 score (cutoff: 0)",
+       x = "Target Age (years)", y = "Rating")
+```
+
+```{r, fig.width = 10}
+# Plot how PC4 scores relate to specific capacities (example with 'reasoning_about_things')
+merged_data %>%
+  mutate(score_cat = case_when(
+    PC4_Score < 0 ~ "low",
+    PC4_Score >= 0 ~ "high")) %>% 
+  mutate(capacity = str_wrap(gsub("_", " ", capacity), 20)) %>%
+  ggplot(aes(x = target_year, y = response, color = score_cat)) +
+  facet_wrap(facets = vars(reorder(capacity, as.numeric(factor)))) +
+  geom_smooth() +
+  # geom_jitter(height = 0, width = 0.2, alpha = 0.05, size = 0.1) +
+  # scale_color_gradient(low = "red", high = "blue") +
+  theme_minimal() +
+  labs(title = "PC4 Scores vs. Reasoning Ratings Across Ages",
+       color = "PC4 score (cutoff: 0)",
+       x = "Target Age (years)", y = "Rating")
+```
+
+
+```{r}
+library(fda)  # Ensure functional data analysis tools are available
+# Step 1: Reshape the data to wide format (each Capacity × Target Age as a column)
+d2_ratings_matrix <- d2_cap_ratings %>%
+  dplyr::select(-c(target, factor)) %>%
+  unite("capacity_age", capacity, target_year, sep = "_") %>%
+  pivot_wider(names_from = capacity_age, values_from = response) %>%
+  column_to_rownames("ResponseId") %>%
+  as.matrix()
+
+# Extract observed eigenvalues from fPCA result
+observed_eigenvalues <- fpca_result$values
+
+# Set up parallel analysis
+num_simulations <- 100  # Increase for better stability
+random_eigenvalues <- matrix(NA, nrow = length(observed_eigenvalues), ncol = num_simulations)
+
+# Generate randomized functional datasets and compute fPCA on them
+set.seed(123)  # For reproducibility
+for (i in 1:num_simulations) {
+  shuffled_data <- d2_ratings_matrix[sample(nrow(d2_ratings_matrix)), ]  # Shuffle rows
+  smoothed_random <- smooth.basis(argvals = ages, y = t(shuffled_data), fdParobj = basis)$fd
+  fpca_random <- pca.fd(smoothed_random, nharm = length(observed_eigenvalues))
+  random_eigenvalues[, i] <- fpca_random$values
+}
+
+# Compute 95th percentile (upper bound) of randomized eigenvalues
+random_threshold <- apply(random_eigenvalues, 1, quantile, probs = 0.95, na.rm = TRUE)
+
+# Plot observed vs. randomized eigenvalues
+plot(observed_eigenvalues, type = "b", pch = 19, col = "blue",
+     xlab = "Principal Component", ylab = "Eigenvalue",
+     main = "Parallel Analysis for fPCA")
+lines(random_threshold, type = "b", pch = 19, col = "red", lty = 2)
+
+legend("topright", legend = c("Observed", "Randomized 95% CI"),
+       col = c("blue", "red"), lty = c(1, 2), pch = 19)
+
+# Determine optimal number of PCs (where observed > random)
+optimal_pcs <- sum(observed_eigenvalues > random_threshold)
+cat("Optimal Number of Functional PCs:", optimal_pcs, "\n")
+
+```
+

@@ -1,0 +1,291 @@
+---
+title: 'Baby mental life: Bi-cross-validation'
+author: "Kara Weisman"
+date: "2025-02-04"
+output: html_document
+---
+
+```{r setup, set.seed(94305), include = F}
+knitr::opts_chunk$set(cache = T)
+knitr::opts_chunk$set(echo = F)
+knitr::opts_chunk$set(fig.pos = 'H')
+knitr::opts_chunk$set(include = F)
+```
+
+```{r load packages}
+# library(ggdendro)
+# library(dendextend)
+library(psych)
+library(lme4)
+library(mgcv)
+library(kableExtra)
+library(langcog)
+library(parameters)
+library(cowplot)
+# library(fda)
+library(rsq)
+library(ggnewscale)
+library(tidyverse)
+
+library(softImpute)
+
+conflicted::conflict_prefer("select", "dplyr")
+conflicted::conflict_prefer("filter", "dplyr")
+```
+
+```{r load custom funs}
+source("../code/custom_funs.R")
+```
+
+```{r load data}
+# suppress warnings and messages because dplyr is verbose
+suppressWarnings(suppressMessages(source("../code/data_prep_s1.R", chdir = TRUE)))
+suppressWarnings(suppressMessages(source("../code/data_prep_s2.R", chdir = TRUE)))
+suppressWarnings(suppressMessages(source("../code/data_prep_s3.R", chdir = TRUE)))
+```
+
+
+\newpage
+In a series of large-scale studies we assessed how US adults conceptualize the development of the human mind over the first five years of life. We identified four core capacities that are perceived by US adults to develop over human infancy and early childhood, _bodily sensation_, _negative affect_, _social connection_, and _cognition and control_ (Study 1); charted how these different aspects of mental life are perceived to change over the first five years of a child's life (Studies 2-3); and explored the intuitive theories that underlie the observed differences in the perceived developmental trajectories of these four aspects of mental life (Study 3). 
+
+In this RMarkdown file, we apply a "bi-cross-validation" approach to the EFA in Study 1.
+
+
+```{r load custom funs}
+source("../code/custom_funs.R")
+```
+
+```{r load data}
+# suppress warnings and messages because dplyr is verbose
+suppressWarnings(suppressMessages(source("../code/data_prep_s1.R", chdir = TRUE)))
+# suppressWarnings(suppressMessages(source("../code/data_prep_s2.R", chdir = TRUE)))
+# suppressWarnings(suppressMessages(source("../code/data_prep_s3.R", chdir = TRUE)))
+```
+
+
+### BCV
+
+```{r}
+# had to instsall from source, not maintained on CRAN. retrieved from https://jingshuw.org/publication/owen-2016-aa/ (see also https://cran.r-project.org/web/packages/esaBcv/)
+# install.packages("https://cran.r-project.org/src/contrib/Archive/esaBcv/esaBcv_1.2.1.1.tar.gz")
+
+# library(esaBcv)
+```
+
+```{r}
+# X <- as.matrix(d1_all)
+# 
+# bcv_res <- EsaBcv(X, center = F) # center adds intercept to model
+# 
+# plot(bcv_res)
+```
+
+```{r}
+# bcv_res$best.r
+# bcv_res$mu
+```
+
+```{r}
+# bcv_res_esa <- ESA(Y = d1_all, r = bcv_res$best.r)
+# 
+# bcv_res_esa_V <- bcv_res_esa$estV
+# colnames(bcv_res_esa_V) <- paste0("V", 1:bcv_res$best.r) 
+# rownames(bcv_res_esa_V) <- colnames(d1_all)
+# 
+# fa.sort(bcv_res_esa_V)
+```
+
+```{r}
+# bcv_res_efa <- fa(d1_all, nfactors = bcv_res$best.r, rotate = "oblimin")
+```
+
+```{r, fig.width = 10, fig.asp = 1.1}
+# heatmap_fun(bcv_res_efa)
+```
+
+
+
+```{r}
+# library(psych)
+# library(dplyr)
+# library(tidyr)
+
+# Example Data: Assuming d1_all includes ParticipantID
+X <- as.matrix(d1_all)  # Data matrix (participants x items)
+
+# Step 1: Create Cross-Validation folds (leave out entire participants)
+k_folds_row <- 5  # Number of participant folds
+k_folds_col <- 5  # Number of item folds
+set.seed(94025)  # For reproducibility
+
+# Assign participants to folds_row
+unique_participants <- unique(d1$ResponseId)
+
+participant_folds <- sample(rep(1:k_folds_row, length.out = length(unique_participants)))
+names(participant_folds) <- unique_participants
+
+participant_folds_target00mo <- participant_folds
+names(participant_folds_target00mo) <- paste(unique_participants, "target00mo", sep = "_")
+
+participant_folds_target09mo <- participant_folds
+names(participant_folds_target09mo) <- paste(unique_participants, "target09mo", sep = "_")
+
+participant_folds_target60mo <- participant_folds
+names(participant_folds_target60mo) <- paste(unique_participants, "target60mo", sep = "_")
+
+participant_folds <- c(
+  participant_folds_target00mo,
+  participant_folds_target09mo,
+  participant_folds_target60mo)
+
+# Assign items (columns) to folds_col
+unique_items <- colnames(X)
+
+item_folds <- sample(rep(1:k_folds_col, length.out = length(unique_items)))
+names(item_folds) <- unique_items
+
+# Map fold assignments back to rows and columns
+folds_row <- participant_folds[as.character(rownames(X))]  # Assign rows to folds based on participant ID
+folds_col <- item_folds[as.character(colnames(X))]  # Assign columns to folds
+
+# Step 2: Bi-Cross-Validation Function for Varying Number of Factors
+nfact_range <- 1:12  # Test from 1 to 12 factors
+
+# Initialize storage for results
+bcv_results <- lapply(nfact_range, function(nfact) {
+  fold_metrics_list <- lapply(1:k_folds_row, function(fold_row) {
+    fold_metrics_col_list <- lapply(1:k_folds_col, function(fold_col) {
+      
+      # Training and Test Data
+      train_data <- X
+      test_data <- X[folds_row == fold_row, , drop = FALSE]  # Hold out participants (rows)
+      
+      train_data[folds_row == fold_row, ] <- NA  # Mask participant data
+      train_data[, folds_col == fold_col] <- NA  # Mask item (column) data
+      
+      # Step 3: Remove items with excessive missing data
+      missing_prop <- colMeans(is.na(train_data))
+      items_to_keep <- names(missing_prop[missing_prop < 0.5])  # Keep items with <50% missingness
+      train_data_filtered <- train_data[, items_to_keep, drop = FALSE]
+      test_data_filtered <- test_data[, items_to_keep, drop = FALSE]
+      
+      # Check if enough items are left to perform EFA
+      if (ncol(train_data_filtered) < nfact) return(rep(NA, 5))  # Return NA for all metrics
+      
+      # Step 4: Fit EFA on Training Data
+      efa_fit <- tryCatch({
+        fa(train_data_filtered, nfactors = nfact, 
+           rotate = "oblimin", fm = "minres", missing = TRUE, scores = "tenBerge")
+      }, error = function(e) { return(NULL) })
+      
+      # Skip fold if EFA did not converge
+      if (is.null(efa_fit)) return(rep(NA, 5))
+      
+      # Step 5: Predict Factor Scores for Test Data Using Observed Values
+      predicted_factor_scores <- tryCatch({
+        factor.scores(test_data_filtered, efa_fit, method = "tenBerge")$scores
+      }, error = function(e) { return(NULL) })
+      
+      # Skip fold if factor score prediction fails
+      if (is.null(predicted_factor_scores)) return(rep(NA, 5))
+      
+      # Step 6: Reconstruct Test Data Using Predicted Factor Scores
+      reconstructed_data <- predicted_factor_scores %*% t(efa_fit$loadings[])
+      
+      # Align reconstructed data with original test_data columns
+      reconstructed_full <- matrix(NA, nrow = nrow(test_data), ncol = ncol(X))
+      colnames(reconstructed_full) <- colnames(X)
+      reconstructed_full[, items_to_keep] <- reconstructed_data
+      
+      # Identify positions with observed data in both matrices
+      mask <- !is.na(test_data) & !is.na(reconstructed_full)
+      
+      # Step 7: Compute Multiple Evaluation Metrics
+      if (sum(mask) > 0) {  
+        mse <- mean((test_data[mask] - reconstructed_full[mask])^2)
+        rmse <- sqrt(mse)
+        mae <- mean(abs(test_data[mask] - reconstructed_full[mask]), na.rm = TRUE)
+        srmr <- sqrt(mean((cor(test_data, use = "pairwise.complete.obs") - 
+                           cor(reconstructed_full, use = "pairwise.complete.obs"))^2, na.rm = TRUE))
+        correlation <- cor(as.vector(test_data[mask]), as.vector(reconstructed_full[mask]), use = "pairwise.complete.obs")
+      } else {
+        mse <- NA
+        rmse <- NA
+        mae <- NA
+        srmr <- NA
+        correlation <- NA
+      }
+      
+      return(c(MSE = mse, RMSE = rmse, MAE = mae, SRMR = srmr, Correlation = correlation))
+      
+    })  # End column fold loop
+    
+    # Convert fold-level metrics to a data frame and take the mean across item folds
+    fold_metrics_col_df <- do.call(rbind, fold_metrics_col_list)
+    colMeans(fold_metrics_col_df, na.rm = TRUE)
+    
+  })  # End row fold loop
+  
+  # Convert row-level metrics to a data frame and take the mean across participant folds
+  fold_metrics_df <- do.call(rbind, fold_metrics_list)
+  colMeans(fold_metrics_df, na.rm = TRUE)
+})
+
+# Convert list to data frame with explicit column names
+bcv_results_df <- as.data.frame(do.call(rbind, bcv_results)) %>%
+  rownames_to_column("nfact") %>%
+  mutate(nfact = as.numeric(nfact)) %>%
+  select(nfact, everything())
+
+colnames(bcv_results_df)[2:ncol(bcv_results_df)] <- c("MSE", "RMSE", "MAE", "SRMR", "Correlation")
+
+# Display the full table of evaluation metrics
+bcv_results_df %>%
+  kable(digits = 2) %>%
+  kable_styling()
+```
+
+```{r}
+# library(ggplot2)
+# library(dplyr)
+# library(tidyr)
+
+for(i in colnames(bcv_results_df)[2:ncol(bcv_results_df)]) {
+  which_metric <- i
+  
+  # Compute first and second derivatives to detect the elbow point
+  first_diff <- diff(bcv_results_df[[which_metric]])  # Use [[ ]] to subset correctly
+  second_diff <- diff(first_diff)
+  
+  # Find the first local minimum of the second derivative
+  if (i == "Correlation") {
+    elbow_point <- which(diff(sign(diff(second_diff))) < 0)[1] + 1
+  } else {
+    elbow_point <- which(diff(sign(diff(second_diff))) > 0)[1] + 1
+  }
+  
+  # Plot with the elbow point highlighted
+  p <- bcv_results_df %>%
+    ggplot(aes(x = nfact, y = .data[[which_metric]])) +  # Use .data[[ ]] for tidyverse
+    geom_line() +
+    geom_point() +
+    scale_x_continuous("Number of factors", breaks = seq(0, 100, 1)) +
+    annotate("point", x = elbow_point, y = bcv_results_df[[which_metric]][elbow_point],
+             color = "red", shape = 4, size = 10) +
+    theme_bw()
+  
+  print(p)
+}
+```
+
+```{r, fig.width = 10, fig.asp = 1}
+fa(d1_all, nfactors = 4, rotate = "geominQ") %>% heatmap_fun()
+fa(d1_all, nfactors = 5, rotate = "geominQ") %>% heatmap_fun()
+fa(d1_all, nfactors = 6, rotate = "geominQ") %>% heatmap_fun()
+```
+
+```{r, fig.width = 10, fig.asp = 1}
+fa(d1_all, nfactors = 4) %>% loadings(cutoff = 0) %>% fa.sort()
+fa(d1_all, nfactors = 5) %>% loadings(cutoff = 0) %>% fa.sort()
+fa(d1_all, nfactors = 6) %>% loadings(cutoff = 0) %>% fa.sort()
+```

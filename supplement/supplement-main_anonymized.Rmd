@@ -22,6 +22,9 @@ header-includes:
    - \usepackage{float}
    - \usepackage{url}
    - \usepackage{pdflscape}
+   - \makeatletter
+   - \renewcommand{\fnum@figure}{Figure S\thefigure}
+   - \makeatother
 tables: yes
 ---
 
@@ -39,8 +42,8 @@ resave_plots <- T # uncomment if yes
 ```
 
 ```{r load packages}
-library(ggdendro)
-library(dendextend)
+# library(ggdendro)
+# library(dendextend)
 library(psych)
 library(lme4)
 library(mgcv)
@@ -48,9 +51,17 @@ library(kableExtra)
 library(langcog)
 library(parameters)
 library(cowplot)
-library(tidyverse)
+# library(fda)
 library(rsq)
 library(ggnewscale)
+library(GGally)
+library(ggrepel)
+library(igraph)
+library(ggraph)
+library(tidyverse)
+
+conflicted::conflict_prefer("select", "dplyr")
+conflicted::conflict_prefer("filter", "dplyr")
 ```
 
 ```{r load custom funs}
@@ -70,8 +81,7 @@ In a series of large-scale studies we assessed how US adults conceptualize the d
 
 In these Supplemental Materials, we provide extended information about the methods and results presented in the main paper, present additional results, and provide an item-by-item comparison of the capacity items used here to items used in previous work on mind perception [@gray.etal2007; @weisman.etal2017a; @weisman.etal2017b; @malle2019].
 
-Note: This is a fully reproducible manuscript, written in RMarkdown using the "knitr" package for R [@xie2021]. The full, editable script for all analyses, figures, and tables (here and in the main text) is available in the .Rmd file that generated this document, which can be found in the following GitHub repository (anonymized for peer review): https://anonymous.4open.science/r/baby_mental_life_ms-C261/.
-
+Note: This is a fully reproducible manuscript, written in RMarkdown using the "knitr" and "bookdown" packages for R [@xie2016; @xie2021; @xie2024]. The full, editable script for all analyses, figures, and tables (here and in the main text) is available in the .Rmd file that generated this document (supplement-main.Rmd), which can be found in the following GitHub repository (anonymized for peer review): https://anonymous.4open.science/r/baby_mental_life_ms-C261/.
 
 # Extended methods
 
@@ -133,7 +143,9 @@ Target ages were presented in chronological order, with participants first asses
 
 ### Analysis plan
 
-To our knowledge, there is currently no consensus about how to account for within-participant variance alongside between-participant variance in the context of exploratory factor analysis or similar dimensionality reduction analyses. Thus, to conduct the EFAs reported in Results, we proceeded as if each participant's ratings of the 60 mental capacities for each of the three target ages were a distinct source of data; in other words, as if we had 903 participants assessing one target age each, instead of 301 participants assessing three target ages each. (See [@weisman.etal2017a; @weisman.etal2021], for similar treatments of within-subjects data in the context of EFA.) We used Pearson correlations to obtain minimal residual solutions and applied an oblique transformation (oblimin) to the resulting factor structures, using the "psych" package for R [@revelle2021]. 
+Traditional exploratory factor analysis techniques are not equipped to account for within-participant variance alongside between-participant variance. To conduct the EFAs reported in Results, we proceeded as if each participant's ratings of the 60 mental capacities for each of the three target ages were a distinct source of data; in other words, as if we had 903 participants assessing one target age each, instead of 301 participants assessing three target ages each. See [@weisman.etal2017a; @weisman.etal2021], for similar treatments of within-subjects data in the context of EFA; but see also [@owen.wang2016] for a bi-cross-validation technique, which might be adapted to address this repeated-measures design by structuring cross-validation folds to exclude all observations from a given participant within a given fold. (We thank a helpful reviewer for this suggestion.)
+
+We used Pearson correlations to obtain minimal residual solutions and applied an oblique transformation (oblimin) to the resulting factor structures, using the "psych" package for R [@revelle2021]. 
 
 In order to determine how many factors to retain, we examined the results of three factor retention protocols: (1) Parallel analysis, which compares the observed correlation structure to the correlation structure arising from random datasets of the same size; (2) Minimizing the Bayesian Information Criterion (BIC), which is one method of optimizing both goodness of fit and parsimony; and (3) A set of factor retention criteria that have been used in Weisman et al.'s previous work [@weisman.etal2017a], in which they retained factors with eigenvalues greater than 1.0, which individually accounted for greater than 5% of the shared variance before transformation or rotation, and which were the "dominant" factor (the factor with the strongest absolute factor loading) for at least one mental capacity after transformation (a factor had to meet all three of these criteria in order to be retained). Our interpretation of how best to characterize our dataset (i.e., how many factors we observe) was guided by the degree of consensus among these three protocols and the interpretability of the retained factors under each protocol.
 
@@ -333,9 +345,237 @@ if (resave_plots == T | !file.exists("../outputs/fig01.pdf")) {
 }
 ```
 
-```{r fig01, fig.cap="Study 1, factor solution suggested by parallel analysis. (Identical to Figure 1 in main text.)"}
-# knitr::include_graphics("../outputs/fig01.pdf")
+```{r fig01, fig.cap="Study 1, factor solution suggested by parallel analysis. (Identical to Figure 1 in main text.)", include = F}
+knitr::include_graphics("../outputs/fig01.pdf")
 ```
+
+```{r figS01 code, fig.width = 8, fig.asp = 0.8}
+# custom density function with adjustable smoothing
+density_fn <- function(data, mapping, adj_val = 3, ...) {
+  filtered_data <- data %>%
+    filter(!is.na(factor))
+
+  ggplot(filtered_data, mapping) +
+    geom_density(
+      aes(color = factor, fill = factor),
+      alpha = 0.2, adjust = adj_val, inherit.aes = TRUE, ...)  # adjust controls smoothness
+}
+
+# custom points function with horizontal line
+points_fn <- function(data, mapping, ...) {
+  ggplot(data, mapping) +
+    geom_hline(
+      yintercept = 0, 
+      linetype = "dashed", 
+      color = "black",
+      size = 0.3) +
+    geom_point(
+      aes(color = factor, fill = factor),
+      alpha = 0.9, size = 1, inherit.aes = TRUE, ...)
+}
+
+# plot
+ggpairs(
+  legend = c(2, 1),
+  switch = "both",
+  s1_efa_par$loadings[] %>%
+    data.frame() %>%
+    rownames_to_column("capacity") %>%
+    mutate(
+      # a priori sorting of capacities (for Studies 2-3)
+      factor = case_when(
+        capacity %in% c(
+          "getting_hungry", "feeling_pain", "feeling_tired", "hearing_sounds",
+          "feeling_physically_uncomfortable") ~ "Bodily sensation",
+        capacity %in% c(
+          "feeling_overwhelmed", "feeling_distressed", "feeling_frustrated",
+          "feeling_helpless", "feeling_lonely") ~ "Negative affect",
+        capacity %in% c(
+          "feeling_happy", "finding_something_funny", "feeling_excited",
+          "loving_somebody", "learning_from_other_people") ~ "Social connection",
+        capacity %in% c(
+          "having_self_control", "controlling_their_emotions", "telling_right_from_wrong",
+          "planning", "reasoning_about_things") ~ "Cognition and control")) %>%
+    mutate(factor = factor(
+      factor, 
+      levels = c(
+        "Bodily sensation", "Negative affect", 
+        "Social connection", "Cognition and control"))) %>%
+    mutate(capacity = gsub("_", " ", capacity)) %>%
+    select(MR2, MR4, MR3, MR1, everything()) %>%
+    rename(`Cognition and control` = MR1,
+           `Bodily sensation` = MR2,
+           `Social connection` = MR3,
+           `Negative affect` = MR4),
+  aes(color = factor, fill = factor),
+  columns = 1:4,
+  # upper = list(continuous = text_fn_filtered),
+  upper = list(continuous = points_fn),
+  lower = list(continuous = points_fn),
+  # diag = list(continuous = ggally_densityDiag),
+  diag = list(continuous = density_fn),
+  # diag = "blank",
+  showStrips = TRUE
+) +
+  geom_vline(xintercept = 0, lty = 2, color = "black", size = 0.3) +
+  # geom_hline(yintercept = 0, lty = 2, color = "black", size = 0.3) +
+  scale_color_viridis_d(
+    name = "Domain (Studies 2-3):",
+    end = 0.9, option = "viridis",
+    na.value = "gray80",
+    labels = c(
+      "Bodily sensation", "Negative affect", 
+      "Social connection", "Cognition and control", 
+      "Not used in Studies 2-3"),
+    aesthetics = c("color", "fill")
+  ) +
+  scale_x_continuous(breaks = seq(-100, 100, 100)) +
+  scale_y_continuous(breaks = seq(-100, 100, 100)) +
+  guides(color = guide_legend(override.aes = list(size = 3)),
+         fill = guide_legend(override.aes = list(size = 3))) +
+  # labs(color = "Domain (Studies 2-3):", fill = "Domain (Studies 2-3):") +
+  theme_minimal() +
+  theme(panel.border = element_rect(fill = NA, color = "black"),
+        panel.grid = element_blank(),
+        strip.placement = "outside",
+        legend.position = "right")
+
+# save plot
+if (resave_plots == T | !file.exists("../outputs/figS01.pdf")) {
+  ggsave("../outputs/figS01.jpg")
+  ggsave("../outputs/figS01.svg")
+  ggsave("../outputs/figS01.pdf")
+}
+```
+
+
+```{r figS01, fig.cap="Study 1, scatterplot matrix ('pairs plot') visualizing the relationships among factor loadings and the distributions of factor loadings across items for the four-factor solution suggested by parallel analysis (loadings presented in Figure 1). Along the diagonal are density plots showing, for each of the four factors, the distribution of factor loadings for the subset of capacities later used to represent each 'domain' in Studies 2-3. Panels in the upper and lower triangles are scatterplots of factor loadings on each pair of factors, including all of the capacities included in Study 1.", include = T}
+knitr::include_graphics("../outputs/figS01.pdf")
+```
+
+
+```{r figS02 function, fig.width = 10}
+figS02_fun <- function(domain1, domain2) {
+  
+  domain1 <- sym(domain1)
+  domain2 <- sym(domain2)
+  
+  d <- s1_efa_par$loadings[] %>%
+    data.frame() %>%
+    rownames_to_column("capacity") %>%
+    mutate(
+      factor = case_when(
+        capacity %in% c(
+          "getting_hungry", "feeling_pain", "feeling_tired", "hearing_sounds",
+          "feeling_physically_uncomfortable") ~ "Bodily sensation",
+        capacity %in% c(
+          "feeling_overwhelmed", "feeling_distressed", "feeling_frustrated",
+          "feeling_helpless", "feeling_lonely") ~ "Negative affect",
+        capacity %in% c(
+          "feeling_happy", "finding_something_funny", "feeling_excited",
+          "loving_somebody", "learning_from_other_people") ~ "Social connection",
+        capacity %in% c(
+          "having_self_control", "controlling_their_emotions", "telling_right_from_wrong",
+          "planning", "reasoning_about_things") ~ "Cognition and control")) %>%
+    mutate(factor = factor(
+      factor, 
+      levels = c(
+        "Bodily sensation", "Negative affect", 
+        "Social connection", "Cognition and control"))) %>%
+    mutate(capacity = gsub("_", " ", capacity)) %>%
+    # gather(factor, loading, starts_with("MR")) %>%
+    rename("Cognition and control" = MR1,
+           "Bodily sensation" = MR2,
+           "Social connection" = MR3,
+           "Negative affect" = MR4)
+  
+  p <- d %>%
+    ggplot(aes(x = !!domain1,
+               y = !!domain2)) +
+    geom_hline(yintercept = 0, lty = 2) +
+    geom_vline(xintercept = 0, lty = 2) +
+    geom_point(aes(color = factor)) +
+    ggrepel::geom_text_repel(
+      aes(label = capacity,
+          color = factor),
+      show.legend = F,
+      size = 3) +
+    # geom_text(aes(label = capacity)) +
+    scale_color_viridis_d(
+      name = "Domain (Studies 2-3):",
+      end = 0.9, option = "viridis", na.value = "gray70",
+      labels = c("Bodily sensation", "Negative affect", 
+                 "Social connection", "Cognition and control",
+                 "Not included in Studies 2-3")
+    ) +
+    scale_x_continuous(breaks = seq(-1, 1, 0.2)) +
+    scale_y_continuous(breaks = seq(-1, 1, 0.2)) +
+    coord_fixed() +
+    theme_minimal()
+  
+  print(p)
+}
+```
+
+```{r figS02 code, fig.width = 10}
+for(i in c("Bodily sensation", "Negative affect", 
+           "Social connection", "Cognition and control")) {
+  for(j in c("Bodily sensation", "Negative affect", 
+             "Social connection", "Cognition and control")) {
+    if(i != j) {
+      figS02_fun(i, j)
+      
+      # save plot
+      if (resave_plots == T | !file.exists(
+        paste0("../outputs/figS02_",
+               gsub(" ", "-", tolower(i)), "_",
+               gsub(" ", "-", tolower(j)),
+               ".pdf"))) {
+        ggsave(
+          paste0("../outputs/figS02_",
+                 gsub(" ", "-", tolower(i)), "_",
+                 gsub(" ", "-", tolower(j)),
+                 ".jpg"))
+        ggsave(
+          paste0("../outputs/figS02_",
+                 gsub(" ", "-", tolower(i)), "_",
+                 gsub(" ", "-", tolower(j)),
+                 ".svg"))
+        ggsave(
+          paste0("../outputs/figS02_",
+                 gsub(" ", "-", tolower(i)), "_",
+                 gsub(" ", "-", tolower(j)),
+                 ".pdf"))
+      }
+    }
+  }
+}
+```
+
+```{r figS02, fig.cap="Study 1, scatter plot visualizing the relationship between factor loadings on the factors we have labeled 'bodily sensation' and 'negative affect' in the factor solution suggested by parallel analysis (loadings presented in Figure 1). The subset of capacities used in Studies 2-3 are color-coded according to the domain they were selected to represent in those studies.", include = T}
+knitr::include_graphics("../outputs/figS02_bodily-sensation_negative-affect.pdf")
+```
+
+```{r figS03, fig.cap="Study 1, scatter plot visualizing the relationship between factor loadings on the factors we have labeled 'bodily sensation' and 'social connection' in the factor solution suggested by parallel analysis (loadings presented in Figure 1). The subset of capacities used in Studies 2-3 are color-coded according to the domain they were selected to represent in those studies.", include = T}
+knitr::include_graphics("../outputs/figS02_bodily-sensation_social-connection.pdf")
+```
+
+```{r figS04, fig.cap="Study 1, scatter plot visualizing the relationship between factor loadings on the factors we have labeled 'bodily sensation' and 'cognition and control' in the factor solution suggested by parallel analysis (loadings presented in Figure 1). The subset of capacities used in Studies 2-3 are color-coded according to the domain they were selected to represent in those studies.", include = T}
+knitr::include_graphics("../outputs/figS02_bodily-sensation_cognition-and-control.pdf")
+```
+
+```{r figS05, fig.cap="Study 1, scatter plot visualizing the relationship between factor loadings on the factors we have labeled 'negative affect' and 'social connection' in the factor solution suggested by parallel analysis (loadings presented in Figure 1). The subset of capacities used in Studies 2-3 are color-coded according to the domain they were selected to represent in those studies.", include = T}
+knitr::include_graphics("../outputs/figS02_negative-affect_cognition-and-control.pdf")
+```
+
+```{r figS06, fig.cap="Study 1, scatter plot visualizing the relationship between factor loadings on the factors we have labeled 'negative affect' and 'cognition and control' in the factor solution suggested by parallel analysis (loadings presented in Figure 1). The subset of capacities used in Studies 2-3 are color-coded according to the domain they were selected to represent in those studies.", include = T}
+knitr::include_graphics("../outputs/figS02_negative-affect_cognition-and-control.pdf")
+```
+
+```{r figS07, fig.cap="Study 1, scatter plot visualizing the relationship between factor loadings on the factors we have labeled 'social connection' and 'cognition and control' in the factor solution suggested by parallel analysis (loadings presented in Figure 1). The subset of capacities used in Studies 2-3 are color-coded according to the domain they were selected to represent in those studies.", include = T}
+knitr::include_graphics("../outputs/figS02_social-connection_cognition-and-control.pdf")
+```
+
 
 #### Minimizing BIC
 
@@ -393,18 +633,18 @@ s1_efa_bic$Vaccounted %>%
 
 We consider the first of these factors ("`r names(data.frame(s1_efa_bic$loadings[]))[1]`") to resonate with the construct we have called _cognition and control_, the second ("`r names(data.frame(s1_efa_bic$loadings[]))[2]`") to resonate with the construct we have called _bodily sensation_, the third ("`r names(data.frame(s1_efa_bic$loadings[]))[3]`") to resonate with the construct we have called _social connection_, and the fourth ("`r names(data.frame(s1_efa_bic$loadings[]))[4]`") to resonate with the construct we have called _negative affect_. The fifth factor ("`r names(data.frame(s1_efa_bic$loadings[]))[5]`") appears to pick out capacities particularly relevant to social interaction (e.g., social learning, person recognition, humor, listening), and the sixth factor ("`r names(data.frame(s1_efa_bic$loadings[]))[6]`") appears to pick out negative emotions (e.g., anger, annoyance, boredom, social fear); however, there were no capacities that loaded strongly on either of these capacities. 
 
-```{r figS01 code, fig.width = 9, fig.asp = 1.2}
+```{r figS08 code, fig.width = 9, fig.asp = 1.2}
 heatmap_fun(s1_efa_bic)
 
 # save plot
-if (resave_plots == T | !file.exists("../outputs/figS01.pdf")) {
-  ggsave("../outputs/figS01.svg")
-  ggsave("../outputs/figS01.pdf")
+if (resave_plots == T | !file.exists("../outputs/figS08.pdf")) {
+  ggsave("../outputs/figS08.svg")
+  ggsave("../outputs/figS08.pdf")
 }
 ```
 
-```{r figS01, fig.cap="Study 1, factor solution suggested by minimizing BIC.", include = F}
-knitr::include_graphics("../outputs/figS01.pdf")
+```{r figS08, fig.cap="Study 1, factor solution suggested by minimizing BIC.", include = F}
+knitr::include_graphics("../outputs/figS08.pdf")
 ```
 
 #### Weisman et al.'s (2017) factor retention criteria
@@ -454,18 +694,18 @@ s1_efa_wdm$Vaccounted %>%
 
 We consider the first of these factors ("`r names(data.frame(s1_efa_wdm$loadings[]))[1]`") to resonate most strongly with the construct we have called _cognition and control_, and the second ("`r names(data.frame(s1_efa_wdm$loadings[]))[2]`") to resonate most strongly with the construct we have called _bodily sensation_. These factors are also quite similar to the constructs of "agency" and "experience" in Gray et al.'s original studies of mind perception [@gray.etal2007].
 
-```{r figS02 code, fig.width = 9, fig.asp = 1.2}
+```{r figS09 code, fig.width = 9, fig.asp = 1.2}
 heatmap_fun(s1_efa_wdm)
 
 # save plot
-if (resave_plots == T | !file.exists("../outputs/figS02.pdf")) {
-  ggsave("../outputs/figS02.svg")
-  ggsave("../outputs/figS02.pdf")
+if (resave_plots == T | !file.exists("../outputs/figS09.pdf")) {
+  ggsave("../outputs/figS09.svg")
+  ggsave("../outputs/figS09.pdf")
 }
 ```
 
-```{r figS02, fig.cap="Study 1, factor solution suggested by minimizing BIC."}
-knitr::include_graphics("../outputs/figS02.pdf")
+```{r figS09, fig.cap="Study 1, factor solution suggested by minimizing BIC.", include = F}
+knitr::include_graphics("../outputs/figS09.pdf")
 ```
 
 #### Four-factor solution, varimax rotation
@@ -524,7 +764,7 @@ s1_efa_4_varimax$Vaccounted %>%
 
 ### Capacity ratings: Developmental trajectories
 
-Study 1 also offered a first glimpse into US adults' perceptions of the development of mental life. Supplementary Figure \@ref(fig:figS03) provides a visualization of mean "scores" for each domain of mental life. To calculate these scores, we sorted each of the 60 mental capacities included in this study into on of the four domains (_bodily sensation_, _negative affect_, _social connection_ or _cognition and control_) according to the factor on which it loaded the most strongly and positively (see Supplementary Table \@ref(tab:tabs1efaparload)); for each participant, we then took the average of their responses to capacities in each domain at each target age. As we go on to confirm in Studies 2-3, this visualization suggests that participants perceived capacities for _bodily sensation_ to be substantial at birth and to develop relatively little over the first five years of life; in contrast, they perceived capacities for _negative affect_, _social connection_, and in particular _cognition and control_ to be much more limited at birth and to development dramatically over the first five years of life. 
+Study 1 also offered a first glimpse into US adults' perceptions of the development of mental life. Supplementary Figure \@ref(fig:figS10) provides a visualization of mean "scores" for each domain of mental life. To calculate these scores, we sorted each of the 60 mental capacities included in this study into on of the four domains (_bodily sensation_, _negative affect_, _social connection_ or _cognition and control_) according to the factor on which it loaded the most strongly and positively (see Supplementary Table \@ref(tab:tabs1efaparload)); for each participant, we then took the average of their responses to capacities in each domain at each target age. As we go on to confirm in Studies 2-3, this visualization suggests that participants perceived capacities for _bodily sensation_ to be substantial at birth and to develop relatively little over the first five years of life; in contrast, they perceived capacities for _negative affect_, _social connection_, and in particular _cognition and control_ to be much more limited at birth and to development dramatically over the first five years of life. 
 
 ```{r s1 scales}
 d1_scales <- s1_efa_par$loadings[] %>%
@@ -591,7 +831,7 @@ contrasts(d1_gam$factor) <- cbind(
   soc_cog = c(0, 0, 1, 0))
 ```
 
-```{r figS03 code, fig.width = 8, fig.asp = 0.5}
+```{r figS10 code, fig.width = 8, fig.asp = 0.5}
 d1_gam %>%
   group_by(ResponseId, target_year, factor) %>%
   # # ALTERNATIVE: take just top 5 items per factor (like Study 2)
@@ -629,14 +869,14 @@ d1_gam %>%
   guides(color = guide_none())
 
 # save plot
-if (resave_plots == T | !file.exists("../outputs/figS03.pdf")) {
-  ggsave("../outputs/figS03.svg")
-  ggsave("../outputs/figS03.pdf")
+if (resave_plots == T | !file.exists("../outputs/figS10.pdf")) {
+  ggsave("../outputs/figS10.svg")
+  ggsave("../outputs/figS10.pdf")
 }
 ```
 
-```{r figS03, fig.cap="Perceived developmental trajectories for four domains of mental life (Study 1). Lighter lines represent individual participants' scores, black points correspond to mean scores across the sample, and error bars are bootstrapped 95% confidence intervals.", include = T}
-knitr::include_graphics("../outputs/figS03.pdf")
+```{r figS10, fig.cap="Perceived developmental trajectories for four domains of mental life (Study 1). Lighter lines represent individual participants' scores, black points correspond to mean scores across the sample, and error bars are bootstrapped 95% confidence intervals.", include = T}
+knitr::include_graphics("../outputs/figS10.pdf")
 ```
 
 ```{r s1 export results}
@@ -719,7 +959,7 @@ s2_efa_par$Vaccounted %>%
   kable_styling(latex_options = c("repeat_header"), font_size = 8)
 ```
 
-```{r figS04 code, fig.width = 9, fig.asp = 0.5}
+```{r figS11 code, fig.width = 9, fig.asp = 0.5}
 heatmap_fun(s2_efa_par, 
             factor_names = c("Negative affect",
                              "Cognition and control",
@@ -727,14 +967,14 @@ heatmap_fun(s2_efa_par,
                              "Social connection"))
 
 # save plot
-if (resave_plots == T | !file.exists("../outputs/figS04.pdf")) {
-  ggsave("../outputs/figS04.svg")
-  ggsave("../outputs/figS04.pdf")
+if (resave_plots == T | !file.exists("../outputs/figS11.pdf")) {
+  ggsave("../outputs/figS11.svg")
+  ggsave("../outputs/figS11.pdf")
 }
 ```
 
-```{r figS04, fig.cap="Study 2, factor solution suggested by parallel analysis. (Identical to Figure 1 in main text.)"}
-# knitr::include_graphics("../outputs/figS04.pdf")
+```{r figS11, fig.cap="Study 2, factor solution suggested by parallel analysis. (Identical to Figure 1 in main text.)", include = F}
+knitr::include_graphics("../outputs/figS11.pdf")
 ```
 
 #### Minimizing BIC
@@ -794,18 +1034,18 @@ s2_efa_bic$Vaccounted %>%
 
 We consider the first of these factors ("`r names(data.frame(s2_efa_bic$loadings[]))[1]`") to resonate with the construct we have called _cognition and control_, the second ("`r names(data.frame(s2_efa_bic$loadings[]))[2]`") to resonate with the construct we have called _bodily sensation_, the third ("`r names(data.frame(s2_efa_bic$loadings[]))[3]`") to resonate with the construct we have called _social connection_, and the fourth and fifth ("`r names(data.frame(s2_efa_bic$loadings[]))[4]`" and "`r names(data.frame(s2_efa_bic$loadings[]))[5]`") to resonate with the construct we have called _negative affect_. The sixth factor ("`r names(data.frame(s2_efa_bic$loadings[]))[6]`") appears to pick out capacities particularly relevant to social interaction (e.g., social learning, love). We have no strong intuitions about how to interpret the seventh and eighth factors ("`r names(data.frame(s2_efa_bic$loadings[]))[7]`" and "`r names(data.frame(s2_efa_bic$loadings[]))[8]`"). 
 
-```{r figS05 code, fig.width = 9, fig.asp = 1.2}
+```{r figS12 code, fig.width = 9, fig.asp = 1.2}
 heatmap_fun(s2_efa_bic)
 
 # save plot
-if (resave_plots == T | !file.exists("../outputs/figS05.pdf")) {
-  ggsave("../outputs/figS05.svg")
-  ggsave("../outputs/figS05.pdf")
+if (resave_plots == T | !file.exists("../outputs/figS12.pdf")) {
+  ggsave("../outputs/figS12.svg")
+  ggsave("../outputs/figS12.pdf")
 }
 ```
 
-```{r figS05, fig.cap="Study 2, factor solution suggested by minimizing BIC.", include = F}
-knitr::include_graphics("../outputs/figS05.pdf")
+```{r figS12, fig.cap="Study 2, factor solution suggested by minimizing BIC.", include = F}
+knitr::include_graphics("../outputs/figS12.pdf")
 ```
 
 #### Weisman et al.'s (2017) factor retention criteria
@@ -836,21 +1076,51 @@ To test these hypotheses, we conducted a multilevel logistic regression via a ge
 In brief, we view these results as confirming our hypotheses that US adults would rate older children as more capable across the board, but that perceptions of the development of children's capacities would differ across domains. (See main text for extended interpretation.)
 
 ```{r s2 scales}
-d2_scales <- s2_efa_par$loadings[] %>%
-  data.frame() %>%
-  rownames_to_column("capacity") %>%
-  gather(factor, loading, -capacity) %>%
-  group_by(capacity) %>%
-  top_n(1, loading) %>%
-  ungroup() %>%
-  mutate(factor = recode_factor(
-    factor,
-    "MR3" = "Bodily sensation",
-    "MR1" = "Negative affect",
-    "MR4" = "Social connection",
-    "MR2" = "Cognition and control")) %>%
-  arrange(factor, desc(loading)) %>%
-  mutate(order = 1:nrow(.))
+d2_scales <- data.frame(
+  capacity = colnames(d2_all)) %>%
+  mutate(
+    factor = case_when(
+      capacity %in% c(
+        "getting_hungry", "feeling_pain", "feeling_tired", "hearing_sounds",
+        "feeling_physically_uncomfortable") ~ "Bodily sensation",
+      capacity %in% c(
+        "feeling_overwhelmed", "feeling_distressed", "feeling_frustrated",
+        "feeling_helpless", "feeling_lonely") ~ "Negative affect",
+      capacity %in% c(
+        "feeling_happy", "finding_something_funny", "feeling_excited",
+        "loving_somebody", "learning_from_other_people") ~ "Social connection",
+      capacity %in% c(
+        "having_self_control", "controlling_their_emotions", "telling_right_from_wrong",
+        "planning", "reasoning_about_things") ~ "Cognition and control")) %>%
+  mutate(factor = factor(
+    factor, 
+    levels = c(
+      "Bodily sensation", "Negative affect", 
+      "Social connection", "Cognition and control"))) %>%
+  arrange(factor) %>%
+  mutate(loading = NA,
+         order = 1:nrow(.))
+
+# # alternatively, could define this based on study 1 data
+# d2_scales <- d1_scales %>%
+#   filter(capacity %in% colnames(d2_all))
+
+# # alternatively, could define this based on study 2 data
+# d2_scales <- s2_efa_par$loadings[] %>%
+#   data.frame() %>%
+#   rownames_to_column("capacity") %>%
+#   gather(factor, loading, -capacity) %>%
+#   group_by(capacity) %>%
+#   top_n(1, loading) %>%
+#   ungroup() %>%
+#   mutate(factor = recode_factor(
+#     factor,
+#     "MR3" = "Bodily sensation",
+#     "MR1" = "Negative affect",
+#     "MR4" = "Social connection",
+#     "MR2" = "Cognition and control")) %>%
+#   arrange(factor, desc(loading)) %>%
+#   mutate(order = 1:nrow(.))
 ```
 
 ```{r s2 cap ratings dataset}
@@ -1767,7 +2037,6 @@ parameters(s3_lmer_cog, standardize = "refit") %>%
   kable_styling(latex_options = c("repeat_header"), font_size = 8)
 ```
 
-
 ### Developmental mechanisms: Selection of "most important"
 
 As described in the main text, we also assessed participants' responses to forced-choice questions about the "most important" factor driving the development of each of these capacities. 
@@ -2151,6 +2420,102 @@ if (resave_plots == T | !file.exists("../outputs/fig03.jpg")) {
 }
 ```
 
+```{r fig04, fig.cap="Network graph summarizing the importance of each developmental mechanism (along the bottom) for each capacity (along the top) among US adults (Study 3). Capacities are sorted and color-coded by domain (see Figures 2-3); developmental mechanisms are arranged in the fixed order of presentation (roughly, from what we perceived to be the most innate or biological mechanisms of development, to what we perceived to be the most learned or social). See main text for the full text of each mechanism. (Identical to Figure 4 in the main manuscript.)", fig.width = 8, fig.asp = 0.8}
+d3_mech_ratings_graph <- d3_mech_ratings %>%
+  mutate(dev_factor = as.character(dev_factor))
+
+# create nodes dataframe
+nodes <- tibble(
+  name = c(d2_scales$capacity[d2_scales$capacity %in% unique(d3_mech_ratings$capacity)],
+           levels(d3_mech_ratings$dev_factor))) %>%
+  mutate(type = ifelse(name %in% d3_mech_ratings_graph$dev_factor, TRUE, FALSE))
+
+# create bipartite graph
+g <- graph_from_data_frame(
+  d = d3_mech_ratings_graph %>%
+    select(capacity, dev_factor, response) %>%
+    # filter(!is.na(response), !is.na(dev_factor)) %>%
+    group_by(capacity, dev_factor) %>%
+    summarise(mean = mean(response, na.rm = T)) %>%
+    ungroup(),
+  vertices = nodes,
+  directed = FALSE
+)
+
+# plot network graph
+ggraph(g, layout = "bipartite") +
+  geom_edge_link(
+    aes(width = mean,
+        alpha = mean,
+        color = mean)) +
+  geom_node_point(
+    data = . %>%
+      mutate(name = factor(name, levels = nodes$name)),
+    aes(color = name),
+    size = 5) +
+  geom_node_text(aes(label = gsub("_", " ", name)),
+                 angle = 45,
+                 # vjust = -2,
+                 hjust = c(rep(0, 8), rep(1, 10)),
+                 nudge_x = c(rep(0.05, 8), rep(-0.05, 10)),
+                 nudge_y = c(rep(0.05, 8), rep(-0.05, 10)),
+                 # nudge_y = c(rep(-1, 8), rep(1, 10)),
+                 size = 3) +
+  scale_color_manual(
+    values = c(rep("#440154FF", 2),
+               rep("#35608DFF", 2),
+               rep("#22A884FF", 2),
+               rep("#BBDF27FF", 2),
+               c("#800080", "#8B1A6A", "#990033", "#A0002B", "#BD0026", 
+                 "#D31B1C", "#E31A1C", "#F03B20", "#FC4E2A", "#FD8D3C"))
+               # rep("#f94802", 10))
+  ) +
+  # scale_color_manual(
+  #   values = c("FALSE" = "black", "TRUE" = "#f94802"),
+  #   labels = c("Capacity", "Developmental mechanism"), name = "Node Type") +
+  scale_edge_width_continuous(range = c(0.01, 0.7), limits = c(0, 6)) +
+  scale_edge_alpha_continuous(range = c(0.05, 1), limits = c(0, 6), breaks = seq(0, 6, 1)) +
+  scale_edge_colour_gradient2(
+    # low = "gray95", high = "gray70",
+    low = "gray90", mid = "gray80", high = "gray10",
+    midpoint = 4,
+    limits = c(0, 6),
+    breaks = seq(0, 6, 1),
+    labels = c("0 (not at all important)", 1:5, "6 (extremely important)")) +
+  annotate("text", label = "Capacities", 
+           x = 5.5, 
+           y = Inf, vjust = 1, hjust = 0.5) +
+  annotate("text", label = "Developmental mechanisms", 
+           x = 5.5, 
+           y = -Inf, vjust = -1, hjust = 0.5) +
+  scale_x_continuous(limits = c(0, 11)) +
+  scale_y_continuous(limits = c(-0.3, 1.3)) +
+  theme_minimal() +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        # plot.background = element_rect(fill = NA, color = "black"),
+        legend.position = "right"
+        ) +
+  guides(edge_width = guide_none(),
+         edge_alpha = guide_none(),
+         edge_color = guide_edge_colorbar(barwidth = 0.5, barheight = 10),
+         color = guide_none()) +
+  labs(#title = "Two-Mode Network: Capacities & developmental mechanisms",
+       # edge_width = "Mean rating:",
+       # edge_alpha = "Mean rating:",
+       edge_color = "Mean rating:\n")
+
+# save plot
+if (resave_plots == T | !file.exists("../outputs/fig04.pdf")) {
+  ggsave("../outputs/fig04.jpg")
+  ggsave("../outputs/fig04.svg")
+  ggsave("../outputs/fig04.pdf")
+}
+```
+
+
+
 ```{r s3 export results}
 # save numerical results
 s3_results <- list(demo = d3_demo,
@@ -2174,11 +2539,11 @@ saveRDS(s3_results, "../outputs/s3_results.rds")
 ```
 
 
-# Study comparison: Capacity attributions to newborns, 9-months, and 5-year-olds
+# Study comparison
 
 As described in the main text, all of the current studied employed a fixed-order design, in which all participants assessed target ages in a fixed order beginning with the youngest target age (newborns) and proceeding chronologically until the oldest target age (5-year-olds). This decision reflects the fact that our priority in these studies was to assess beliefs about the developmental trajectories of capacities, rather than beliefs about capacities at a specific point in development. However, one limitation of this fixed-order design is that it makes it difficult to assess the stability of participants’ assessments of the fine-grained differences between specific points in development. 
 
-To provide some sense of the stability and reliability of US adults' representations of specific target ages across studies, Supplementary Figure \@ref(fig:figS06) presents a comparison of capacity ratings and summary scores by domain at the three target ages that were included in all of the current studies (newborns, 9-month-olds, and 5-year-olds). As a reminder, in Study 1, participants assessed 60 capacities (including but not limited to the 20 capacities depicted in Panel A), at each of the 3 target ages depicted here. In Study 2, participants assessed the 20 capacities depicted in Panel A, at 13 target ages (including but not limited to the 3 target ages depicted here). In Study 3, participants assessed 8 capacities (a subset of the 20 capacities depicted in Panel A), at 13 target ages (including but not limited to the 3 target ages depicted here).
+To provide some sense of the stability and reliability of US adults' representations of specific target ages across studies, Supplementary Figure \@ref(fig:figS13) presents a comparison of capacity ratings at the three target ages that were included in all of the current studies (newborns, 9-month-olds, and 5-year-olds). As a reminder, in Study 1, participants assessed 60 capacities (including but not limited to the 20 capacities depicted in Panel A), at each of the 3 target ages depicted here. In Study 2, participants assessed the 20 capacities depicted in Panel A, at 13 target ages (including but not limited to the 3 target ages depicted here). In Study 3, participants assessed 8 capacities (a subset of the 20 capacities depicted in Panel A), at 13 target ages (including but not limited to the 3 target ages depicted here).
 
 ```{r}
 d123_gam <- full_join(
@@ -2196,8 +2561,8 @@ d123_gam <- full_join(
       mutate(response = response*100))
 ```
 
-```{r figS06 code, fig.width = 10, fig.asp = 1.2}
-figS06 <- d123_gam %>%
+```{r figS13 code, fig.width = 10, fig.asp = 1.2}
+figS13 <- d123_gam %>%
   filter(target_ord %in% c("newborns", "9-month-olds", "5-year-olds")) %>%
   filter(capacity %in%
            c(full_join(d2_gam %>% distinct(capacity),
@@ -2269,16 +2634,106 @@ figS06 <- d123_gam %>%
        color = "Domain:",
        fill = "Study:") +
   guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
-figS06
+figS13
 
-if (resave_plots == T | !file.exists("../outputs/figS06.pdf")) {
-  ggsave("../outputs/figS06.svg")
-  ggsave("../outputs/figS06.pdf")
+if (resave_plots == T | !file.exists("../outputs/figS13.pdf")) {
+  ggsave("../outputs/figS13.jpg")
+  ggsave("../outputs/figS13.svg")
+  ggsave("../outputs/figS13.pdf")
 }
 ```
 
-```{r figS06, fig.cap="Comparison of capacity ratings across studies (Studies 1-3). This visualization includes responses for each of the capacities and target ages held in common across at least two of our three studies. Lighter colorful represent individual participants’ responses or scores, larger points correspond to mean responses or scores across the sample, and error bars are bootstrapped 95% confidence intervals.", include = T}
-knitr::include_graphics("../outputs/figS06.pdf")
+```{r figS13, fig.cap="Comparison of capacity ratings across studies (Studies 1-3). This visualization includes responses for each of the capacities and target ages held in common across at least two of our three studies. Lighter colorful points represent individual participants’ responses, larger points correspond to mean responses across the sample, and error bars are bootstrapped 95% confidence intervals.", include = T}
+knitr::include_graphics("../outputs/figS13.pdf")
+```
+
+
+```{r}
+d23_gam_pred <- d2_gam_r1_pred %>%
+  mutate(study = "Study 2") %>%
+  full_join(d3_gam_r1_pred %>% mutate(study = "Study 3")) %>%
+  mutate(study = factor(study, levels = c("Study 1", "Study 2", "Study 3")))
+```
+
+```{r figS14 code, fig.width = 10, fig.asp = 0.5}
+figS14 <- d23_gam_pred %>%
+  full_join(
+    d1_gam %>%
+      mutate(study = "Study 1") %>%
+      group_by(study, ResponseId, factor, target, target_year) %>%
+      summarise(score = mean(response/100, na.rm = T))) %>%
+  ggplot(aes(x = target_year, y = score, 
+             color = study, fill = study)) +
+  facet_grid(cols = vars(factor)) +
+  geom_jitter(height = 0, width = 0.1, size = 0.01, alpha = 0.05) +
+  geom_smooth(aes(y = pred_score, color = study, fill = study), 
+              fill = NA, size = 0.8, lty = 1, 
+              show.legend = F) +
+  geom_path(
+    data = . %>%
+      filter(study == "Study 1") %>%
+      # filter(target_year %in% c(0, 9/12, 5)) %>%
+      group_by(study, target, target_year,
+               factor) %>%
+      summarise(mean = mean(score, na.rm = T)) %>%
+      ungroup(),
+    aes(y = mean, group = study),
+    color = "#1b9e77", lty = 2) +
+  geom_pointrange(
+    data = . %>%
+      # filter(study == "Study 1") %>%
+      filter(target_year %in% c(0, 9/12, 5)) %>%
+      group_by(study, target, target_year,
+               factor) %>%
+      multi_boot_standard(col = "score", na.rm = T) %>%
+      ungroup(),
+    aes(y = mean, ymin = ci_lower, ymax = ci_upper,
+        group = study, fill = study),
+    # color = "#1b9e77", 
+    shape = 21, fatten = 2,
+    show.legend = F) +
+  # geom_text(
+  #   data = . %>%
+  #     group_by(study, target, target_year, target_num, target_ord, 
+  #              factor) %>%
+  #     summarise(mean = mean(score, na.rm = T)) %>%
+  #     ungroup(),
+  #   aes(y = mean, group = study, label = gsub("Study ", "", study)),
+  #   color = "white", size = 2.5, fontface = "bold", hjust = 0.5, vjust = 0.5,
+  #   position = position_dodge(width = 0.8)) +
+  # scale_fill_manual(values = c("#9801a3", "#a3012f", "#a36501"), 
+  #                   aesthetics = c("color", "fill")) +
+  scale_fill_brewer(palette = "Dark2", aesthetics = c("color", "fill")) +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.25),
+    labels = seq(0, 100, 25)) +
+  # scale_x_discrete(labels = c("newborns", "9 months", "5 years")) +
+  # scale_x_discrete(labels = levels(d123_gam$target_ord)) +
+  # scale_x_continuous(breaks = seq(0, 5, 1)) +
+  theme_minimal() +
+  theme(panel.background = element_rect(fill = NA), 
+        strip.text = element_text(vjust = 0),
+        legend.position = "top") +
+        # axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+        # plot.margin = unit(c(0.5, 0.5, 0.5, 1.1), "cm")) +
+  labs(x = "Target age (years)",
+       y = "Mean score across all capacities in domain\n0 = not at all capable, 100 = completely capable",
+       # caption = "Error bars are bootstrapped 95% CIs; solid lines are estimates from GAMs (Studies 1 and 2)",
+       color = "Study:",
+       fill = "Study:") +
+  guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
+
+figS14
+
+if (resave_plots == T | !file.exists("../outputs/figS14.pdf")) {
+  ggsave("../outputs/figS14.jpg")
+  ggsave("../outputs/figS14.svg")
+  ggsave("../outputs/figS14.pdf")
+}
+```
+
+```{r figS14, fig.cap="Comparison of mean scores across studies (Studies 1-3). These scores incorporate responses to all of the capacities and target ages included in each study; this varies across studies. Lighter points represent individual participants’ scores, larger points correspond to mean scores across the sample, and error bars are bootstrapped 95% confidence intervals. The dotted line for Study 1 connects mean scores across target ages; the solid lines for Studies 2-3 reflect predictions from study-specific GAMs.", include = T}
+knitr::include_graphics("../outputs/figS14.pdf")
 ```
 
 
